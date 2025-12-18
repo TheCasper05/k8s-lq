@@ -1,0 +1,22 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - corepack enable
+            # Instalar dependencias SIN correr postinstall
+            - npx pnpm install --ignore-scripts
+            # Ahora sí generar GraphQL antes de que el código se importe
+            - npx pnpm graphql:codegen
+            # Ahora sí ejecutar postinstall de todos los workspaces
+            - npx pnpm -r run postinstall
+        build:
+          commands:
+            - npx pnpm --filter student-teacher build
+      artifacts:
+        baseDirectory: apps/student-teacher/.output/public
+        files:
+          - "**/*"
+      buildPath: /
+    appRoot: apps/student-teacher

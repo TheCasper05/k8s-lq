@@ -1,0 +1,87 @@
+# Dependabot configuration for automated dependency updates
+# LQ Real-time Service - WebSocket & Webhook Handler
+
+version: 2
+
+updates:
+  # Python dependencies via pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "lingoquesto/owners"
+    assignees:
+      - "lingoquesto/owners"
+    labels:
+      - "dependencies"
+      - "python"
+      - "realtime-service"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+    # Automatically group minor and patch updates
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "patch"
+
+    # Ignore major version updates for critical packages that may break WebSocket connections
+    ignore:
+      - dependency-name: "fastapi"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "uvicorn"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "websockets"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "lingoquesto/owners"
+    assignees:
+      - "lingoquesto/owners"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "lingoquesto/owners"
+    assignees:
+      - "lingoquesto/owners"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker"
+      include: "scope"

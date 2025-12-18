@@ -1,0 +1,42 @@
+overwrite: true
+schema:
+  ${GRAPHQL_ENDPOINT}:
+    headers:
+      X-Requested-With: XMLHttpRequest
+documents:
+  - "packages/graphql/src/**/*.ts"
+  - "apps/**/graphql/**/*.ts"
+  - "apps/**/graphql/**/*.graphql"
+  - "!**/node_modules/**"
+generates:
+  packages/graphql/src/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-vue-apollo
+    config:
+      withCompositionFunctions: false
+      vueCompositionApiImportFrom: vue
+      dedupeOperationSuffix: true
+      omitOperationSuffix: false
+      skipTypename: false
+      useTypeImports: true
+      enumsAsTypes: true
+      strictScalars: true
+      avoidOptionals: true
+      onlyOperationTypes: true
+      scalars:
+        DateTime: string
+        Date: string
+        Decimal: number
+        JSON: Record<string, any>
+        Upload: File
+        Email: string
+        IntOrAll: number | 'all'
+        JSONString: string
+        Slug: string
+        UUID: string
+        URL: string
+hooks:
+  afterAllFileWrite:
+    - prettier --write

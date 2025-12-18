@@ -1,0 +1,32 @@
+{
+    "properties": {
+        "name": {"type": "string", "description": "Name of the course"},
+        "description": {"type": "string", "description": "Description of the course"},
+        "submodules": {
+            "type": "array",
+            "description": "Array of submodules that make up the course. The amount of submodules should be as much as the user specifies or as much as needed to cover the whole course.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Name of the submodule"},
+                    "scenarios": {
+                        "type": "array",
+                        "description": "Array of scenario descriptions for this submodule. The amount of scenarios should be at least as much as the user specifies. Each description should be as detailed as needed in order for the scenario to be created correctly for the user to learn the submodule correctly. However, ONLY IF THE USER DOES NOT SPECIFY THE AMOUNT OF SCENARIOS, create at least 4 scenarios per submodule.",
+                        "items": {
+                            "type": "string",
+                            "description": "Description of a specific scenario. Each description should be as detailed as needed in order for the scenario to be created correctly for the user to learn the submodule correctly. For example: 'The scenario is about the user discussing the introductory facts about evolution with the AI teacher. The user is a beginner in the subject and the AI teacher is an expert in the subject. The teacher must enquire and ask questions about: natural selection, genetic mutation, and gregor mendel.'"
+                        }
+                    }
+                },
+                "required": ["name", "scenarios"],
+                "additionalProperties": false
+            }
+        }
+    },
+    "title": "Course",
+    "type": "object",
+    "required": ["submodules", "name", "description"],
+    "additionalProperties": false,
+    "strict": true
+}
+

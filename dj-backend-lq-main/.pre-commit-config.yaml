@@ -1,0 +1,50 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: name-tests-test
+        args: [--pytest-test-first]
+      - id: no-commit-to-branch
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.15.0"
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports]
+        additional_dependencies:
+          - django-stubs
+          - django-environ
+          - psycopg
+          - graphene-django-cruddals==0.1.12
+          - "django-allauth[socialaccount]"
+          - django-cors-headers
+          - celery
+          - redis
+          - django-storages
+          - psutil
+          - types-psutil
+          - types-requests
+          - django-unfold
+          - django-nested-admin
+          - django-shortuuidfield
+          - django-currentuser
+          - django-json-widget  
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pytest-cov
+        name: Pytest with Coverage
+        entry: ./.venv/bin/pytest --cov=. --cov-report=term --cov-fail-under=80
+        language: python
+        types: [python]
+        pass_filenames: false
+        always_run: true

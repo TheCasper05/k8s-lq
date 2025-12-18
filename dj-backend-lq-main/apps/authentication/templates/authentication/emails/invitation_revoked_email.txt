@@ -1,0 +1,10 @@
+Asunto: Invitación a {{ workspace_name }} cancelada
+
+Hola,
+
+La invitación que recibiste para unirte a "{{ workspace_name }}" ha sido cancelada.
+
+Si crees que esto es un error, por favor contacta con el administrador del workspace.
+
+---
+© LingoQuesto

@@ -1,0 +1,98 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lq-qa-db
+      POSTGRES_USER: lqqauser
+      POSTGRES_PASSWORD: lqqauser
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lqqauser -d lq-qa-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery and caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Web Application
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - staticfiles:/app/static
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+      - db
+    command: ["server"]
+
+  # Celery Worker
+  # celery-worker:
+  #   build: .
+  #   volumes:
+  #     - .:/app
+  #     - ./media:/app/media
+  #   environment:
+  #     - DATABASE_URL=postgresql://lqqauser:lqqauser@localhost:5432/lq-qa-db
+  #     - REDIS_URL=redis://localhost:6380/0
+  #     - REDIS_CACHE_URL=redis://localhost:6380/1
+  #     - CELERY_BROKER_URL=redis://localhost:6380/0
+  #     - CELERY_RESULT_BACKEND=redis://localhost:6380/0
+  #     - LINGOBOT_ADDRESS=http://localhost:8001
+  #   env_file:
+  #     - .env.docker
+  #   network_mode: host
+  #   depends_on:
+  #     - redis
+  #     - db
+  #   entrypoint: []
+  #   command:
+  #     - bash
+  #     - -c
+  #     - |
+  #       cd /app
+  #       echo 'Waiting for database...';
+  #       while ! nc -z localhost 5432; do sleep 5; done;
+  #       echo 'Database is ready!';
+  #       echo 'Waiting for Redis...';
+  #       while ! nc -z localhost 6380; do sleep 5; done;
+  #       echo 'Redis is ready!';
+  #       echo 'Starting Celery worker...';
+  #       uv run celery -A config worker --loglevel=info --concurrency=4
+
+  # # Celery Flower (Monitoring)
+  # celery-flower:
+  #   build: .
+  #   ports:
+  #     - "5555:5555"
+  #   env_file:
+  #     - .env.docker
+  #   depends_on:
+  #     - redis
+  #     - db
+  #   command: ["celery-flower"]
+
+volumes:
+  postgresdata:
+  redisdata:
+  mediafiles:
+  staticfiles:

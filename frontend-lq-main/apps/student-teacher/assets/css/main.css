@@ -1,0 +1,83 @@
+@import "primeicons/primeicons.css";
+
+@layer tailwind-base, primevue, tailwind-utilities;
+
+@layer tailwind-base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface-0 dark:bg-surface-800;
+    color: var(--p-text-color);
+  }
+
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+  }
+}
+
+@layer primevue {
+  .lq-container {
+    @apply py-4 sm:py-6 space-y-3 sm:space-y-4;
+  }
+
+  .card {
+    @apply rounded-lg bg-surface-0 dark:bg-surface-900 p-6 shadow-sm;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    background-color: var(--p-secondary-600);
+    color: white;
+    @apply rounded-lg px-4 py-2 font-medium transition-colors;
+  }
+  .btn-secondary:hover {
+    background-color: var(--p-secondary-700);
+  }
+
+  .btn-outline {
+    @apply rounded-lg border-2 border-primary-600 px-4 py-2 font-medium text-primary-600 transition-colors hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .input-base {
+    @apply w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500;
+  }
+}
+
+@layer tailwind-utilities {
+  .text-gradient {
+    background-image: linear-gradient(to right, var(--p-primary-600), var(--p-secondary-600));
+    @apply bg-clip-text text-transparent;
+  }
+
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700;
+  }
+
+  .bg-gradient-secondary {
+    background-image: linear-gradient(to right, var(--p-secondary-500), var(--p-secondary-700));
+  }
+
+  .shadow-soft {
+    box-shadow:
+      0 2px 15px -3px rgba(0, 0, 0, 0.07),
+      0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Hide scrollbar for horizontal scroll on mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

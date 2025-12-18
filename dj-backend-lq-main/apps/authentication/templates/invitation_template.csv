@@ -1,0 +1,4 @@
+email,workspace_slug,role,classroom_names,welcome_message
+usuario1@ejemplo.com,institution-minuto-de-dios-2-54d378a9,student,Clase A|Clase B,Bienvenido a nuestro workspace de aprendizaje
+usuario2@ejemplo.com,personal-d813df57-236a-4259-997c-57db37889f86-86744e69,teacher,Matemáticas 101,
+usuario3@ejemplo.com,mi-workspace-slug,coordinator,,Te invitamos a coordinar este espacio

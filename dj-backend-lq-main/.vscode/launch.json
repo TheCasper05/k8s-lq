@@ -1,0 +1,78 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Django Server: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["runserver"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py",
+      "justMyCode": false
+    },
+    {
+      "name": "Django Migrate Data: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["migrate_data"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py",
+      "justMyCode": false,
+      "env": {
+        "PYDEVD_CONTAINER_RANDOM_ACCESS_MAX_ITEMS": "200000"
+      }
+    },
+    {
+      "name": "Zod Schema: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["zod_schema"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py",
+      "justMyCode": false
+    },
+    {
+      "name": "Vuetify Config: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["vuetify_config"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py",
+      "justMyCode": false
+    },
+    {
+      "name": "Model Data: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "args": ["dto"],
+      "django": true,
+      "autoStartBrowser": false,
+      "program": "${workspaceFolder}/manage.py",
+      "justMyCode": false
+    },
+    {
+      "name": "Celery Worker: Launch",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "-m",
+      "args": ["celery", "-A", "config", "worker", "--loglevel=info"],
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": ["debug-test"],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+email,workspace_slug,role,classroom_names,welcome_message
+usuario1@ejemplo.com,mi-workspace-slug,student,Clase A|Clase B,Bienvenido a nuestro workspace de aprendizaje
+usuario2@ejemplo.com,otro-workspace,teacher,Matemáticas 101,
+usuario3@ejemplo.com,mi-workspace-slug,coordinator,,Te invitamos a coordinar este espacio

@@ -1,0 +1,15 @@
+{
+  "workbench.colorTheme": "Default Dark+",
+  // "editor.formatOnSave": true,
+  "python.testing.unittestEnabled": false,
+  "python.analysis.extraPaths": ["./apps", "./apps"],
+  "cSpell.words": ["questo", "Questo"],
+  "mypy.env": {
+    "DJANGO_SETTINGS_MODULE": "config.settings"
+  },
+  "mypy.runUsingActiveInterpreter": true,
+  "cursorpyright.analysis.extraPaths": ["./apps", "./apps"],
+  "python.testing.pytestArgs": ["--rootdir=."],
+  "python.testing.pytestEnabled": true,
+  "python.testing.autoTestDiscoverOnSaveEnabled": true
+}

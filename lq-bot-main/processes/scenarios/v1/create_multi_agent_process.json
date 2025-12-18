@@ -1,0 +1,53 @@
+[
+  {
+    "id": "prepare_context",
+    "system_prompt": {
+      "category": "scenarios",
+      "name": "prepare_context_system",
+      "version": "v1"
+    },
+    "user_prompt": {
+      "category": "scenarios",
+      "name": "prepare_context_user",
+      "version": "v1"
+    },
+    "response_schema": {
+      "category": "scenarios",
+      "name": "prepare_context_schema",
+      "version": "v1"
+    },
+    "context": {},
+    "llm_params": {
+      "temperature": 0.2,
+      "max_tokens": 400
+    },
+    "output_key": "scenario_inputs",
+    "stop_on_error": true
+  },
+  {
+    "id": "build_scenario",
+    "system_prompt": {
+      "category": "scenarios",
+      "name": "create_system",
+      "version": "v1"
+    },
+    "user_prompt": {
+      "category": "scenarios",
+      "name": "create_user",
+      "version": "v1"
+    },
+    "response_schema": {
+      "category": "scenarios",
+      "name": "create_response_schema",
+      "version": "v1"
+    },
+    "context": {},
+    "llm_params": {
+      "temperature": 0.35,
+      "max_tokens": 1800
+    },
+    "output_key": "scenario_json",
+    "stop_on_error": true
+  }
+]
+

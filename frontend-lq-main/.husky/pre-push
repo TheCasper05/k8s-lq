@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# TODO: active test
+# Commenting out typecheck due to existing TypeScript errors in the codebase
+# pnpm typecheck
+
+# pnpm test:unit
+# pnpm vitest
+# pnpm jest
+

@@ -1,0 +1,14 @@
+Asunto: {{ invited_name }} aceptó tu invitación
+
+Hola {{ inviter_name }},
+
+Buenas noticias: {{ invited_name }} ({{ invited_email }}) aceptó tu invitación y ahora es miembro de "{{ workspace_name }}".
+
+✅ Rol asignado: {{ role_display }}
+✅ Fecha de unión: {{ accepted_at|date:"d/m/Y H:i" }}
+
+Puedes ver el nuevo miembro en tu workspace:
+{{ members_url }}
+
+---
+© LingoQuesto

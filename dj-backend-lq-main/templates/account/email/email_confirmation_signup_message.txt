@@ -1,0 +1,8 @@
+Hola {{ user_display|default:current_site.name }},
+
+Confirma tu correo electrónico para activar tu cuenta en LingoQuesto y empezar a practicar inglés con nuestro tutor impulsado por IA.
+
+Haz clic en el siguiente enlace o cópialo en tu navegador:
+{{ activate_url }}
+
+Si no creaste esta cuenta simplemente puedes ignorar este mensaje.

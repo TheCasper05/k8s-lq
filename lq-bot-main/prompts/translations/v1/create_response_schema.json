@@ -1,0 +1,30 @@
+{
+    "properties": {
+        "translations": {
+            "type": "array",
+            "description": "The array of translations of the list.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the word that came in the input. This must be an exact COPY PASTE from the id in the input text."
+                    },
+                    "translation": {
+                        "type": "string",
+                        "description": "The translation of the word in the language included in the INSTRUCTIONS"
+                    }
+                },
+                "required": ["id", "translation"],
+                "additionalProperties": false,
+                "strict": true
+            }
+        }
+    },
+    "title": "Translations",
+    "type": "object",
+    "required": ["translations"],
+    "additionalProperties": false,
+    "strict": true
+}
+

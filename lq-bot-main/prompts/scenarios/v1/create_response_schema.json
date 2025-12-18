@@ -1,0 +1,71 @@
+{
+    "title": "Scenario",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "title": {
+            "type": "string",
+            "description": "Scenario title. Try to include in it the lesson of the scenario"
+        },
+        "assistant_gender": {
+            "type": "string",
+            "enum": ["male", "female"],
+            "description": "Gender/sex of the assistant role. Choose either «male» or «female»."
+        },
+        "scenario_type": {
+            "type": "string",
+            "enum": ["teacher", "roleplay", "knowledge"],
+            "description": "Kind of interaction requested."
+        },
+        "practice_topic": {
+            "type": "string",
+            "description": "Target topic for practice (or «all» if unclear)."
+        },
+        "complete_description": {
+            "type": "string",
+            "description": "Display text shown to the learner. ‘You’ = learner, ‘I’ = assistant. English only."
+        },
+        "theme": {
+            "type": "string",
+            "description": "One-line theme summary (e.g. “Ordering Food at a Spanish Restaurant”)."
+        },
+        "assistant_role": {"type": "string", "description": "Role played by the assistant."},
+        "user_role": {"type": "string", "description": "Role played by the user."},
+        "setting": {"type": "string", "description": "Physical or situational setting."},
+        "potential_directions": {
+            "type": "string",
+            "description": "Five comma-separated avenues the dialog could take."
+        },
+        "example": {
+            "type": "string",
+            "description": "One-line sample exchange with no newline chars."
+        },
+        "additional_data": {
+            "type": "array",
+            "description": "Any important details that the user wants to add to the scenario. Must be as much as the user specifies.",
+            "items": {
+                "type": "string",
+                "description": "The detail of the additional data."
+            }
+        },
+        "appropriate": {
+            "type": "boolean",
+            "description": "True if topic is safe for all ages; otherwise false."
+        }
+    },
+    "required": [
+        "title",
+        "assistant_gender",
+        "scenario_type",
+        "practice_topic",
+        "complete_description",
+        "theme",
+        "assistant_role",
+        "user_role",
+        "setting",
+        "potential_directions",
+        "example",
+        "appropriate",
+        "additional_data"
+    ]
+}

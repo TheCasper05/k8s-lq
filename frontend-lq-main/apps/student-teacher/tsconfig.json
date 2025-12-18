@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./*"],
+      "@lq/ui": ["../../packages/ui/src"],
+      "@lq/ui/*": ["../../packages/ui/src/*"],
+      "@lq/graphql": ["../../packages/graphql/src"],
+      "@lq/graphql/*": ["../../packages/graphql/src/*"],
+      "@lq/stores": ["../../packages/stores/src"],
+      "@lq/stores/*": ["../../packages/stores/src/*"],
+      "@lq/utils": ["../../packages/utils/src"],
+      "@lq/utils/*": ["../../packages/utils/src/*"],
+      "@lq/clients": ["../../packages/clients/src"],
+      "@lq/clients/*": ["../../packages/clients/src/*"],
+      "@lq/shared": ["../../shared"],
+      "@lq/shared/*": ["../../shared/*"],
+      "#app": ["node_modules/nuxt/dist/app"],
+      "#imports": [".nuxt/imports.d.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.vue", ".nuxt/nuxt.d.ts"]
+}

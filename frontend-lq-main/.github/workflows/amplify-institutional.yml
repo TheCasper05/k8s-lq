@@ -1,0 +1,183 @@
+# WORKFLOW DESACTIVADO - Cambiar "if: false" a "if: true" en los jobs para reactivar
+name: Deploy Institutional to Amplify
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - "apps/institutional/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+      - "package.json"
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths:
+      - "apps/institutional/**"
+      - "packages/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - qa
+          - prod
+
+env:
+  NODE_VERSION: "24.11.1"
+  PNPM_VERSION: "10.15.1"
+
+jobs:
+  setup:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    if: false  # Workflow desactivado
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      branch: ${{ steps.set-env.outputs.branch }}
+    steps:
+      - name: Set environment based on branch
+        id: set-env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            if [[ "${{ inputs.environment }}" == "prod" ]]; then
+              echo "branch=main" >> $GITHUB_OUTPUT
+            else
+              echo "branch=develop" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=prod" >> $GITHUB_OUTPUT
+            echo "branch=main" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "branch=develop" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "branch=develop" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    name: Build and Deploy Institutional
+    runs-on: ubuntu-latest
+    needs: setup
+    if: false  # Workflow desactivado
+    environment:
+      name: ${{ needs.setup.outputs.environment }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linter
+        run: pnpm --filter @lq/institutional lint
+
+      - name: Run type check
+        run: pnpm --filter @lq/institutional typecheck
+
+      - name: Build application
+        run: pnpm build:institutional
+        env:
+          NODE_ENV: production
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://api.lingoquest.com' }}
+          GRAPHQL_ENDPOINT: ${{ vars.GRAPHQL_ENDPOINT || 'https://api.lingoquest.com/graphql' }}
+          SENTRY_ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+
+      - name: Configure AWS Credentials
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Trigger Amplify deployment
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: deploy
+        run: |
+          # Get the correct APP_ID based on environment
+          # For backward compatibility, falls back to AMPLIFY_APP_ID_INSTITUTIONAL
+          if [[ "${{ needs.setup.outputs.environment }}" == "prod" ]]; then
+            APP_ID="${{ secrets.AMPLIFY_APP_ID_INSTITUTIONAL_PROD || secrets.AMPLIFY_APP_ID_INSTITUTIONAL }}"
+          else
+            APP_ID="${{ secrets.AMPLIFY_APP_ID_INSTITUTIONAL_STAGING || secrets.AMPLIFY_APP_ID_INSTITUTIONAL }}"
+          fi
+
+          echo "🚀 Deploying to ${{ needs.setup.outputs.environment }} (branch: ${{ needs.setup.outputs.branch }})"
+
+          # Trigger deployment
+          JOB_ID=$(aws amplify start-job \
+            --app-id "$APP_ID" \
+            --branch-name ${{ needs.setup.outputs.branch }} \
+            --job-type RELEASE \
+            --query 'jobSummary.jobId' \
+            --output text)
+
+          echo "job_id=$JOB_ID" >> $GITHUB_OUTPUT
+
+          # Get app URL (best effort, may fail if branch not ready)
+          APP_URL=$(aws amplify get-branch \
+            --app-id "$APP_ID" \
+            --branch-name ${{ needs.setup.outputs.branch }} \
+            --query 'branch.defaultDomain' \
+            --output text 2>/dev/null || echo "pending")
+
+          echo "url=https://$APP_URL" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ needs.setup.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ needs.setup.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **App**: Institutional" >> $GITHUB_STEP_SUMMARY
+          echo "- **Job ID**: ${{ steps.deploy.outputs.job_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment triggered successfully!" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,170 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Quick checks for PRs
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Size Label
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const total = additions + deletions;
+
+            let size = 'size/XS';
+            if (total > 500) size = 'size/XL';
+            else if (total > 250) size = 'size/L';
+            else if (total > 100) size = 'size/M';
+            else if (total > 30) size = 'size/S';
+
+            // Remove old size labels
+            const labels = ['size/XS', 'size/S', 'size/M', 'size/L', 'size/XL'];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  name: label
+                });
+              } catch (e) {
+                // Label doesn't exist, ignore
+              }
+            }
+
+            // Add new size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: [size]
+            });
+
+  # Lint and format check
+  lint-check:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv sync --group dev
+
+      - name: Run Ruff
+        run: |
+          source .venv/bin/activate
+          ruff check . --output-format=github --exit-non-zero-on-fix
+
+      - name: Comment on PR if linting fails
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **Linting failed!** Please run `make format` and `make lint` locally to fix issues.'
+            })
+
+  # Test coverage report
+  test-coverage:
+    name: Test Coverage Report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv sync --all-extras --group dev
+
+      - name: Run tests with coverage
+        run: |
+          source .venv/bin/activate
+          pytest --cov=src --cov-report=term-missing --cov-report=json
+
+      - name: Comment coverage on PR
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('coverage.json', 'utf8'));
+            const percent = coverage.totals.percent_covered.toFixed(2);
+
+            const emoji = percent >= 80 ? '✅' : percent >= 60 ? '⚠️' : '❌';
+
+            const body = `## ${emoji} Test Coverage Report
+
+            **Overall Coverage:** ${percent}%
+
+            | Metric | Value |
+            |--------|-------|
+            | Lines Covered | ${coverage.totals.covered_lines} / ${coverage.totals.num_statements} |
+            | Branches Covered | ${coverage.totals.covered_branches} / ${coverage.totals.num_branches} |
+            | Coverage % | ${percent}% |
+
+            ${percent < 80 ? '⚠️ Coverage is below 80%. Consider adding more tests.' : ''}
+            `;
+
+            // Find existing coverage comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const coverageComment = comments.data.find(
+              comment => comment.body.includes('Test Coverage Report')
+            );
+
+            if (coverageComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: coverageComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "no-console": "off",
+    "unicorn/prefer-node-protocol": "off",
+    "@typescript-eslint/no-explicit-any": "off"
+  }
+}

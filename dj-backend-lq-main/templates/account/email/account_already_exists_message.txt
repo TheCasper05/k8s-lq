@@ -1,0 +1,6 @@
+Hola,
+
+Ya existe una cuenta asociada a {{ email }} en LingoQuesto. Si olvidaste tu contraseña, restablécela en el siguiente enlace y podrás volver a ingresar:
+{{ password_reset_url }}
+
+Si tú no solicitaste este registro, simplemente ignora este mensaje.

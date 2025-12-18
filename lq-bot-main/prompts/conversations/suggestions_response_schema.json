@@ -1,0 +1,17 @@
+{
+    "properties": {
+        "suggestions": {
+            "type": "array",
+            "description": "The array of exactly 3 strings that are going to be suggestions. Keep each suggestion bellow 40 words",
+            "items": {
+                "type": "string",
+                "description": "A suggestion to answer to the assistant's message"
+            }
+        }
+    },
+    "title": "Suggestions",
+    "type": "object",
+    "required": ["suggestions"],
+    "additionalProperties": false,
+    "strict": true
+}

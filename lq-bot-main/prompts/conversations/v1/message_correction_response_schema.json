@@ -1,0 +1,72 @@
+{
+    "properties": {
+        "mistakes": {
+            "type": "array",
+            "description": "The array of mistakes found in the input message. Might be empty.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "explanation": {
+                        "type": "string",
+                        "description": "The explanation of the mistake commited, explaining what the user did wrong."
+                    },
+                    "mistake": {
+                        "title": "Mistake",
+                        "type": "string",
+                        "description": "The exact part of the message in which the mistake was written. It must be a copy-paste of the EXACT part of the message. Keep it as short as possible. "
+                    },
+                    "correction": {
+                        "title": "Correction",
+                        "type": "string",
+                        "description": "The correct way in which the message should've been said"
+                    },
+                    "mistake_type": {
+                        "enum": [
+                            "word_choice",
+                            "sentence_structure",
+                            "wrong_language",
+                            "innapropriate_language",
+                            "punctuation",
+                            "capitalization",
+                            "verb_tense",
+                            "modal_verb_errors",
+                            "auxiliary_verb_errors",
+                            "passive_voice_errors",
+                            "gerunds_infinitives",
+                            "nouns_pronouns",
+                            "quantifier_mistakes",
+                            "articles",
+                            "modifiers_descriptions",
+                            "conectors",
+                            "negatives_agreements",
+                            "prepositions",
+                            "conjunctions",
+                            "double_negatives",
+                            "incorrect_negation_with_auxiliaries",
+                            "filler_words",
+                            "repair_repetition"
+
+                        ],
+                        "type": "string",
+                        "description": "The category in which the user's mistake must be placed. Each category stands for the following: Word Choice: Explanation: Mistakes where the wrong word is used due to confusion between similar words, incorrect collocations, or inappropriate word usage in context. Example: Incorrect: 'I'm looking forward to meet you.' Corrected: 'I'm looking forward to meeting you.' Sentence Structure: Explanation: Errors related to the arrangement of words and phrases to create well-formed sentences. This includes issues with word order, incomplete sentences, run-on sentences, and improper clause linkage. Example: Incorrect: 'Because I was tired. I went to bed early.' Corrected: 'Because I was tired, I went to bed early.' Wrong Language: Explanation: Usage of words or phrases from a language other than the languague provided in the user message. Inappropriate Language: Explanation: Use of offensive, rude, or unsuitable language, including profanity or culturally insensitive terms. Example: Incorrect: 'Shut up and listen to me!' Corrected: 'Please listen to what I have to say.' Punctuation: Explanation: Mistakes involving incorrect or missing punctuation marks, such as commas, periods, question marks, exclamation points, colons, semicolons, and quotation marks. Example: Incorrect: 'Let's eat grandma' Corrected: 'Let's eat, grandma' Capitalization: Explanation: Errors in the use of uppercase and lowercase letters, such as not capitalizing proper nouns, the beginning of sentences, or unnecessary capitalization. Example: Incorrect: 'i visited london last summer.' Corrected: 'I visited London last summer.' Verb and Tense Use: Explanation: Mistakes involving verb forms and tenses. Tense Mistakes: Incorrect: 'Yesterday, I go to the cinema.' Corrected: 'Yesterday, I went to the cinema.' Modal Verb Errors: Incorrect: 'She can to dance very well.' Corrected: 'She can dance very well.' Auxiliary Verb Errors: Incorrect: 'She not like ice cream.' Corrected: 'She does not like ice cream.' Passive Voice Errors: Incorrect: 'The cake bakes by my sister.' Corrected: 'The cake was baked by my sister.' Gerunds vs. Infinitives: Incorrect: 'I enjoy to swim.' Corrected: 'I enjoy swimming.' Nouns, Pronouns, and Articles: Explanation: Mistakes related to the use of nouns, pronouns, and articles. Incorrect Use of Plurals: Incorrect: 'There are three childs playing.' Corrected: 'There are three children playing.' Quantifier Mistakes: Incorrect: 'She has much friends.' Corrected: 'She has many friends.' Articles: Incorrect: 'He is an teacher.' Corrected: 'He is a teacher.' Incorrect: 'I want apple.' Corrected: 'I want an apple.' Pronoun Errors: Pronoun Case: Incorrect: 'Me went to the store.' Corrected: 'I went to the store.' Reflexive Pronouns: Incorrect: 'She hurt hisself.' Corrected: 'She hurt herself.' Modifiers and Descriptions: Explanation: Mistakes with adjectives, adverbs, and other modifiers. Adjectives vs. Adverbs: Incorrect: 'He runs quick.' Corrected: 'He runs quickly.' Misplaced or Missing Modifiers: Incorrect: 'She almost drove her kids to school every day.' Corrected to 'She drove her kids to school almost every day.' Connectors and Linking Words: Explanation: Mistakes with prepositions and conjunctions. Prepositions: Incorrect: 'She is in the bus.' Corrected: 'She is on the bus.' Conjunctions: Incorrect: 'I like tea or coffee.' Corrected: 'I like tea and coffee.' Negatives and Agreement: Explanation: Mistakes with negatives and auxiliary agreement. Double Negatives: Incorrect: 'I don't need no help.' Corrected: 'I don't need any help.' Incorrect Negation with Auxiliaries: Incorrect: 'He no want to come.' Corrected: 'He does not want to come.' Filler words: Incorrect: 'Um, I think I'm gonna, umm, go.' Corrected: 'I think I'm gonna go.' Repair Repetition: Incorrect: 'I want to , want to go.' Corrected: 'I want to go.'"
+
+
+                    },
+                    "mistake_level": {
+                        "enum": ["A1", "A2", "B1", "B2", "C1", "C2"],
+                        "type": "string",
+                        "description": "The level of the mistake. It must be one of the CEFR levels: A1, A2, B1, B2, C1, C2. This level determines in which level the user would be able to understand the mistake. For example, if the mistake is a word or a grammatical topic that is only used in C1, the mistake_level must be C1."
+                    }
+                },
+                "additionalProperties": false,
+                "required": ["explanation", "mistake_type", "mistake", "correction", "mistake_level"]
+            }
+        }
+
+    },
+    "title": "Mistakes",
+    "type": "object",
+    "required": ["mistakes"],
+    "additionalProperties": false,
+    "strict": true
+}

@@ -1,0 +1,35 @@
+Hola,
+
+{{ inviter_name }} te ha invitado a unirte al workspace "{{ workspace_name }}" en LingoQuesto.
+
+{% if welcome_message %}
+Mensaje personalizado:
+"{{ welcome_message }}"
+{% endif %}
+
+📋 Detalles de la invitación:
+- Workspace: {{ workspace_name }}
+- Rol asignado: {{ role_display }}
+{% if classroom_names %}
+- Clases: {{ classroom_names|join:", " }}
+{% endif %}
+
+Para aceptar esta invitación, haz click en el siguiente enlace:
+{{ accept_url }}
+
+{% if expires_at %}
+⏰ Esta invitación expira el {{ expires_at|date:"d/m/Y H:i" }}
+{% if days_remaining is not None %}
+{% if days_remaining == 1 %}
+(1 día restante)
+{% else %}
+({{ days_remaining }} días restantes)
+{% endif %}
+{% endif %}
+{% endif %}
+
+Si no deseas unirte, puedes rechazar la invitación aquí:
+{{ decline_url }}
+
+---
+© LingoQuesto

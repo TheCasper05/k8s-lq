@@ -1,0 +1,55 @@
+line-length = 100
+target-version = "py311"
+
+# Habilitar auto-fix globalmente
+fix = true
+show-fixes = true
+
+exclude = [".git", ".venv", "build", "dist"]
+
+# -----------------------------------------
+# Lint Configuration
+# -----------------------------------------
+[lint]
+select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "W",   # warnings
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "UP",  # pyupgrade
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "PT",  # flake8-pytest-style
+  "PL",  # pylint
+  "RUF", # reglas nativas de Ruff
+]
+
+ignore = [
+  "E203",     # conflicto con black/formatters
+  "E501",     # line length (manejado por formatter)
+  "B008",     # fastapi Depends() pattern es válido
+  "PLR0913",  # too many arguments (común en ports/adapters pattern)
+  "PLR2004",  # magic values (común en tests, no crítico)
+  "PT018",    # assertion breakdown (preferencia de estilo en tests)
+  "PT011",    # pytest.raises too broad (preferencia de estilo)
+  "SIM108",   # ternary operator (preferencia de estilo)
+  "RUF005",   # list concatenation (preferencia de estilo)
+  "RUF012",   # mutable class attributes (a veces necesario)
+  "PLC0415",  # import not at top (lazy imports intencionales)
+]
+
+# -----------------------------------------
+# Format (Reemplaza [format] del ruff.toml anterior)
+# -----------------------------------------
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# -----------------------------------------
+# isort (Reemplaza [tool.ruff.lint.isort])
+# -----------------------------------------
+[lint.isort]
+force-single-line = false
+combine-as-imports = true

@@ -1,0 +1,213 @@
+name: lq-backend-qa
+region: nyc
+
+services:
+  - name: "dj-backend-qa"
+    image:
+      registry_type: DOCR
+      repository: dj-backend
+      tag: qa-latest
+      deploy_on_push:
+        enabled: false
+
+    # health_check:
+    #   http_path: /health/
+    #   initial_delay_seconds: 60
+    #   period_seconds: 10
+    #   timeout_seconds: 5
+    #   success_threshold: 1
+    #   failure_threshold: 3
+
+    http_port: 8000
+
+    instance_count: 1
+    instance_size_slug: basic-xs
+
+    routes:
+      - path: /
+
+    envs:
+      # Core Django
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: ENVIRONMENT
+        value: staging
+      - key: SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      # Database
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+
+      # Redis
+      - key: REDIS_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: REDIS_CACHE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: REDIS_CHANNEL_LAYERS_URL
+        scope: RUN_TIME
+        type: SECRET
+
+      # Celery (SSL for managed Redis)
+      - key: CELERY_BROKER_USE_SSL
+        value: "ssl_cert_reqs=1;"
+      - key: CELERY_REDIS_BACKEND_USE_SSL
+        value: "ssl_cert_reqs=1;"
+
+      # Storage (DigitalOcean Spaces / S3)
+      - key: AWS_ACCESS_KEY_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: AWS_SECRET_ACCESS_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: "lingoquesto2.0"
+      - key: STORAGES_DEFAULT_BACKEND
+        value: "storages.backends.s3boto3.S3Boto3Storage"
+
+      # Email
+      - key: EMAIL_URL
+        scope: RUN_TIME
+        type: SECRET
+
+      # CORS (JWT authentication - simplified)
+      # Include localhost for frontend development + backend URL
+      - key: CORS_ALLOWED_ORIGINS
+        value: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5173,http://127.0.0.1:5173,https://lq-backend-qa-lkbq4.ondigitalocean.app"
+
+      # CSRF (only for Django admin)
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5173,http://127.0.0.1:5173,https://lq-backend-qa-lkbq4.ondigitalocean.app"
+
+      # Security Settings (relaxed for QA)
+      - key: SECURE_SSL_REDIRECT
+        value: "False"
+      - key: SECURE_HSTS_SECONDS
+        value: "0"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "False"
+      - key: SECURE_HSTS_PRELOAD
+        value: "False"
+
+      # External APIs
+      - key: LINGOBOT_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: WEBHOOK_VERIFY_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: GRAPH_API_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+
+      # OAuth (optional)
+      - key: GOOGLE_CLIENT_ID
+        value: "your-google-client-id"
+      - key: GOOGLE_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: MICROSOFT_CLIENT_ID
+        value: "your-microsoft-client-id"
+      - key: MICROSOFT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
+      # Frontend URL
+      - key: ENDPOINT_URL_FRONTEND_ST
+        value: "http://localhost:3000"
+      - key: ENDPOINT_URL_FRONTEND_ADMIN
+        value: "http://localhost:3001"
+
+      # Development
+      - key: HEADLESS_SERVE_SPECIFICATION
+        value: "False"
+
+#   - name: celery-worker
+#     github:
+#       repo: LingoQuesto/dj-backend-lq
+#       branch: staging
+#       deploy_on_push: true
+
+#     dockerfile_path: Dockerfile
+
+#     instance_count: 1
+#     instance_size_slug: basic-xs
+
+#     run_command: "celery -A config worker --loglevel=info --concurrency=4"
+
+#     envs:
+#       - key: DJANGO_SETTINGS_MODULE
+#         value: config.settings
+#       - key: DEBUG
+#         value: "False"
+#       - key: ENVIRONMENT
+#         value: qa
+#       - key: SECRET_KEY
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: DATABASE_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: REDIS_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: CELERY_BROKER_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: CELERY_RESULT_BACKEND
+#         scope: RUN_TIME
+#         type: SECRET
+
+#   - name: celery-beat
+#     github:
+#       repo: LingoQuesto/dj-backend-lq
+#       branch: staging
+#       deploy_on_push: true
+
+#     dockerfile_path: Dockerfile
+
+#     instance_count: 1
+#     instance_size_slug: basic-xxs
+
+#     run_command: "celery -A config beat --loglevel=info"
+
+#     envs:
+#       - key: DJANGO_SETTINGS_MODULE
+#         value: config.settings
+#       - key: DEBUG
+#         value: "False"
+#       - key: ENVIRONMENT
+#         value: qa
+#       - key: SECRET_KEY
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: DATABASE_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: REDIS_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: CELERY_BROKER_URL
+#         scope: RUN_TIME
+#         type: SECRET
+
+# databases:
+#   - name: db
+#     engine: PG
+#     version: "16"
+#     production: false
+#     cluster_name: lingoquest-qa-db
+
+#   - name: redis
+#     engine: REDIS
+#     version: "7"
+#     production: false

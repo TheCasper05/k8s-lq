@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# TODO: active
+# node node_modules/@graphql-codegen/cli/bin.js

@@ -1,0 +1,32 @@
+{
+    "properties": {
+        "metrics": {
+            "type": "array",
+            "description": "The array of graded metrics that came from the conversation.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the metric to be evaluated. (Example: Verb tense)"
+                    },
+                    "grade": {
+                        "type": "string",
+                        "description": "The grade that the conversation got according to the respective metric."
+                    },
+                    "explanation": {
+                        "type": "string",
+                        "description": "An explanation of why the user got that grade in that metric pointing at the specific examples in the conversation"
+                    }
+                },
+                "additionalProperties": false,
+                "required": ["name", "grade", "explanation"]
+            }
+        }
+    },
+    "title": "Rubric",
+    "type": "object",
+    "required": ["metrics"],
+    "additionalProperties": false,
+    "strict": true
+}

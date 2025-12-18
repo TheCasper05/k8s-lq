@@ -1,0 +1,94 @@
+#
+# DigitalOcean App Platform Spec - PRODUCTION Environment
+# This file defines the infrastructure for the production environment
+#
+
+name: lq-bot-prod
+region: nyc
+
+# Environment variables for production
+envs:
+  - key: LQBOT_APP_NAME
+    value: lq-bot-prod
+  - key: LQBOT_ENVIRONMENT
+    value: production
+  - key: LQBOT_LOG_LEVEL
+    value: INFO
+
+  # LLM Provider Configuration
+  - key: LQBOT_LLM_PROVIDER
+    value: openai
+  - key: LQBOT_OPENAI_LLM_MODEL
+    value: gpt-4o-mini
+
+  # TTS Provider Configuration
+  - key: LQBOT_TTS_PROVIDER
+    value: openai
+  - key: LQBOT_OPENAI_TTS_MODEL
+    value: tts-1
+  - key: LQBOT_OPENAI_TTS_VOICE
+    value: alloy
+
+  # STT Provider Configuration
+  - key: LQBOT_STT_PROVIDER
+    value: openai
+  - key: LQBOT_OPENAI_STT_MODEL
+    value: whisper-1
+
+  # Secrets (set these in DigitalOcean App Platform UI)
+  - key: LQBOT_OPENAI_API_KEY
+    scope: RUN_TIME
+    type: SECRET
+  - key: LQBOT_GROK_API_KEY
+    scope: RUN_TIME
+    type: SECRET
+  - key: LQBOT_ELEVENLABS_API_KEY
+    scope: RUN_TIME
+    type: SECRET
+
+# Services
+services:
+  - name: "lq-bot-prod"
+    image:
+      registry_type: DOCR
+      repository: lq-bot
+      tag: prod-latest
+      deploy_on_push:
+        enabled: false
+
+    # Service configuration
+    instance_count: 1
+    instance_size_slug: professional-xs
+
+    # Auto-scaling for production
+    # autoscaling:
+    #   min_instance_count: 2
+    #   max_instance_count: 5
+    #   metrics:
+    #     cpu:
+    #       percent: 70
+
+    # HTTP configuration
+    http_port: 8081
+
+    # Routes
+    routes:
+      - path: /
+
+    # Health check
+    # health_check:
+    #   http_path: /health
+    #   initial_delay_seconds: 10
+    #   period_seconds: 30
+    #   timeout_seconds: 5
+    #   success_threshold: 1
+    #   failure_threshold: 3
+
+# # Alerts
+# alerts:
+#   - rule: DEPLOYMENT_FAILED
+#   - rule: DOMAIN_FAILED
+#   - rule: CPU_UTILIZATION
+#     value: 80
+#   - rule: MEM_UTILIZATION
+#     value: 80

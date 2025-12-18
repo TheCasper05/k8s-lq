@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" style="margin:0;padding:0;">
+  <head>
+    <meta charset="utf-8" />
+    <title>Confirm your email</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f7f2ff;font-family:'Inter',Arial,sans-serif;color:#32104c;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;margin:0 auto;padding:32px 16px;">
+      <tr>
+        <td>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#fef8ff,#f0e4ff);border-radius:28px;padding:40px 32px;box-shadow:0 20px 60px rgba(74,35,104,0.12);">
+            <tr>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:6px 18px;border-radius:999px;background:#f6e9ff;color:#7a3ef0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">LingoQuesto</span>
+                <h1 style="font-size:32px;line-height:1.2;margin:24px 0 12px;font-weight:700;">
+                  ¡Hola {{ user_display|default:current_site.name }}!
+                </h1>
+                <p style="font-size:17px;line-height:1.6;margin:0 auto 24px;max-width:460px;color:#563268;">
+                  Estamos listos para darte la bienvenida a <strong>LingoQuesto</strong>, tu tutor impulsado por IA. Confirma tu correo electrónico para comenzar a practicar inglés de una forma divertida.
+                </p>
+                <a href="{{ activate_url }}" style="display:inline-block;padding:14px 34px;border-radius:999px;font-weight:600;text-decoration:none;background:#8d4bff;color:#ffffff;font-size:16px;box-shadow:0 10px 25px rgba(141,75,255,0.35);">
+                  Confirmar correo
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:32px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="width:33.3%;text-align:center;padding:12px;">
+                      <div style="font-size:26px;font-weight:700;color:#7a3ef0;">10K+</div>
+                      <div style="font-size:13px;text-transform:uppercase;color:#806699;letter-spacing:0.6px;">Estudiantes</div>
+                    </td>
+                    <td style="width:33.3%;text-align:center;padding:12px;border-left:1px solid rgba(122,62,240,0.1);border-right:1px solid rgba(122,62,240,0.1);">
+                      <div style="font-size:26px;font-weight:700;color:#ffbd3c;">500K+</div>
+                      <div style="font-size:13px;text-transform:uppercase;color:#806699;letter-spacing:0.6px;">Conversaciones</div>
+                    </td>
+                    <td style="width:33.3%;text-align:center;padding:12px;">
+                      <div style="font-size:26px;font-weight:700;color:#ff4bc4;">95%</div>
+                      <div style="font-size:13px;text-transform:uppercase;color:#806699;letter-spacing:0.6px;">Éxito</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:24px;text-align:center;color:#7f5c9c;font-size:14px;line-height:1.6;">
+                ¿Necesitas ayuda? Responde este correo o visita nuestra sección de soporte. <br />
+                Si el botón no funciona, copia y pega el siguiente enlace en tu navegador: <br />
+                <a href="{{ activate_url }}" style="color:#8d4bff;word-break:break-all;">{{ activate_url }}</a>
+              </td>
+            </tr>
+          </table>
+          <p style="text-align:center;font-size:12px;color:#a286c0;margin-top:16px;">
+            Recibiste este correo porque creaste una cuenta en LingoQuesto. Si no fuiste tú, puedes ignorarlo.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

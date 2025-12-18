@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lq/ui": ["./packages/ui/src"],
+      "@lq/ui/*": ["./packages/ui/src/*"],
+      "@lq/graphql": ["./packages/graphql/src"],
+      "@lq/graphql/*": ["./packages/graphql/src/*"],
+      "@lq/stores": ["./packages/stores/src"],
+      "@lq/stores/*": ["./packages/stores/src/*"],
+      "@lq/utils": ["./packages/utils/src"],
+      "@lq/utils/*": ["./packages/utils/src/*"],
+      "@lq/clients": ["./packages/clients/src"],
+      "@lq/clients/*": ["./packages/clients/src/*"],
+      "@lq/types": ["./packages/types/src"],
+      "@lq/types/*": ["./packages/types/src/*"]
+    },
+    "types": ["vite/client", "@types/node"]
+  },
+  "exclude": ["node_modules", "dist", ".nuxt", ".output"]
+}

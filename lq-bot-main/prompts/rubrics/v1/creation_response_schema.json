@@ -1,0 +1,41 @@
+{
+    "properties": {
+        "metrics": {
+            "type": "array",
+            "description": "The array of metrics that have to be graded according to the teacher.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the metric to be evaluated. (Example: Verb tense)"
+                    },
+                    "metric_description": {
+                        "type": "string",
+                        "description": "The description of the metric that the teacher intends to evaluate."
+                    },
+                    "grading_type": {
+                        "type": "string",
+                        "description": "The type of score that is going to represent how the student did in the assesment. For ecample: percentages, stars, number of mistakes, number of correct uses, or any other that the teacher specifies. If not specified, it will default to percentage or 0-100 score."
+                    },
+                    "grading_type_description": {
+                        "type": "string",
+                        "description": "The description of the grading_type so that an AI agent understands it. This explanation will help an AI agent judge the student's assesment"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "name",
+                    "metric_description",
+                    "grading_type",
+                    "grading_type_description"
+                ]
+            }
+        }
+    },
+    "title": "Rubric",
+    "type": "object",
+    "required": ["metrics"],
+    "additionalProperties": false,
+    "strict": true
+}

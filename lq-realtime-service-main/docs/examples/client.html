@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LQ Real-time WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-connect {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-disconnect {
+            background: #f44336;
+            color: white;
+        }
+        .btn-send {
+            background: #2196F3;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .messages {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #2196F3;
+            background: white;
+        }
+        .message.received {
+            border-left-color: #4CAF50;
+        }
+        .message.sent {
+            border-left-color: #FF9800;
+        }
+        .message.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LQ Real-time WebSocket Client</h1>
+
+        <div class="input-group">
+            <label for="wsUrl">WebSocket URL:</label>
+            <input type="text" id="wsUrl" value="ws://localhost:8082/ws" placeholder="ws://localhost:8082/ws">
+        </div>
+
+        <div class="input-group">
+            <label for="token">JWT Token:</label>
+            <textarea id="token" placeholder="Paste your JWT token here"></textarea>
+        </div>
+
+        <div>
+            <button class="btn-connect" onclick="connect()">Connect</button>
+            <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+        </div>
+
+        <div id="status" class="status disconnected">
+            Status: Disconnected
+        </div>
+
+        <div class="input-group">
+            <label for="message">Message:</label>
+            <textarea id="message" placeholder='{"type": "message", "payload": {"text": "Hello!"}}'></textarea>
+        </div>
+
+        <div>
+            <button class="btn-send" onclick="sendMessage()">Send Message</button>
+            <button class="btn-send" onclick="sendPing()">Send Ping</button>
+        </div>
+
+        <div class="messages" id="messages">
+            <p>No messages yet...</p>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            const token = document.getElementById('token').value.trim();
+
+            if (!token) {
+                alert('Please provide a JWT token');
+                return;
+            }
+
+            // Add token as query parameter
+            const wsUrlWithToken = `${url}?token=${encodeURIComponent(token)}`;
+
+            try {
+                ws = new WebSocket(wsUrlWithToken);
+
+                ws.onopen = () => {
+                    updateStatus('Connected', true);
+                    addMessage('Connected to WebSocket server', 'received');
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        addMessage(`Received: ${JSON.stringify(data, null, 2)}`, 'received');
+                    } catch (e) {
+                        addMessage(`Received: ${event.data}`, 'received');
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    addMessage(`Error: ${error.message || 'Connection error'}`, 'error');
+                };
+
+                ws.onclose = () => {
+                    updateStatus('Disconnected', false);
+                    addMessage('Disconnected from server', 'error');
+                };
+            } catch (error) {
+                addMessage(`Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to WebSocket');
+                return;
+            }
+
+            const messageText = document.getElementById('message').value.trim();
+            if (!messageText) {
+                alert('Please enter a message');
+                return;
+            }
+
+            try {
+                // Try to parse as JSON, otherwise send as text in message payload
+                let messageData;
+                try {
+                    messageData = JSON.parse(messageText);
+                } catch (e) {
+                    messageData = {
+                        type: 'message',
+                        payload: { text: messageText }
+                    };
+                }
+
+                ws.send(JSON.stringify(messageData));
+                addMessage(`Sent: ${JSON.stringify(messageData, null, 2)}`, 'sent');
+            } catch (error) {
+                addMessage(`Send error: ${error.message}`, 'error');
+            }
+        }
+
+        function sendPing() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to WebSocket');
+                return;
+            }
+
+            const pingMessage = {
+                type: 'ping',
+                payload: { timestamp: new Date().toISOString() }
+            };
+
+            ws.send(JSON.stringify(pingMessage));
+            addMessage(`Sent ping`, 'sent');
+        }
+
+        function updateStatus(text, connected) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = `Status: ${text}`;
+            statusEl.className = connected ? 'status connected' : 'status disconnected';
+        }
+
+        function addMessage(text, type = 'received') {
+            const messagesEl = document.getElementById('messages');
+
+            // Clear "no messages" text
+            if (messagesEl.children.length === 1 && messagesEl.children[0].tagName === 'P') {
+                messagesEl.innerHTML = '';
+            }
+
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+
+            const timestamp = new Date().toLocaleTimeString();
+            messageEl.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <pre style="margin: 5px 0; white-space: pre-wrap;">${text}</pre>
+            `;
+
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // Auto-fill example token structure
+        document.addEventListener('DOMContentLoaded', () => {
+            const exampleMessage = {
+                type: 'message',
+                payload: {
+                    text: 'Hello from WebSocket client!'
+                }
+            };
+            document.getElementById('message').value = JSON.stringify(exampleMessage, null, 2);
+        });
+    </script>
+</body>
+</html>
