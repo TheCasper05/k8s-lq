@@ -1,5 +1,5 @@
 # Dockerfile for student-teacher (Nuxt 4)
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -15,7 +15,7 @@ FROM base AS deps
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/student-teacher/package.json ./apps/student-teacher/
-COPY packages/*/package.json ./packages/*/
+COPY packages ./packages
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --filter=@lq/student-teacher...
@@ -29,9 +29,12 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/student-teacher/node_modules ./apps/student-teacher/node_modules
 COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Copy source code
-COPY turbo.json ./
+COPY turbo.json tsconfig.json ./
 COPY apps/student-teacher ./apps/student-teacher
 
 # Build the application
