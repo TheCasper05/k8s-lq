@@ -25,22 +25,15 @@ RUN pnpm install --frozen-lockfile --filter=@lq/student-teacher...
 # ========================================
 FROM base AS builder
 
-# Copy dependencies from deps stage
+# Copy ALL source code first (including packages source)
+COPY . .
+
+# Copy dependencies from deps stage (will override node_modules)
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/student-teacher/node_modules ./apps/student-teacher/node_modules
-COPY --from=deps /app/packages ./packages
-COPY --from=deps /app/package.json ./package.json
-COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
-# Copy source code
-COPY turbo.json tsconfig.json codegen.yml ./
-COPY apps/student-teacher ./apps/student-teacher
-
-# Build the application
-# Note: GraphQL types must be generated locally before building the Docker image
-# Run: pnpm run graphql:codegen (with backend running)
-RUN pnpm turbo run build --filter=@lq/student-teacher
+# Build the application directly with Nuxt (it will transpile packages on the fly)
+RUN cd apps/student-teacher && pnpm run build
 
 # ========================================
 # Stage 3: Production runtime
