@@ -1,0 +1,44 @@
+# ==============================================================================
+# PERSISTENT VOLUME CLAIM (PVC): PostgreSQL Storage
+# ==============================================================================
+# Un PVC es una solicitud de almacenamiento persistente.
+#
+# ¿Por qué necesitamos esto?
+# - Los Pods son efímeros (se pueden destruir y recrear)
+# - Sin PVC, perderíamos todos los datos de la DB al reiniciar el Pod
+# - El PVC garantiza que los datos sobrevivan a reinicios
+#
+# Conceptos importantes:
+# - StorageClass: Define el tipo de almacenamiento (en Minikube usa 'standard')
+# - AccessMode: ReadWriteOnce = solo un Pod puede escribir a la vez
+# - Capacity: Tamaño del disco (5GB para desarrollo)
+#
+# ⚠️ En Minikube, los datos se guardan en:
+#    /tmp/hostpath-provisioner/lingoquesto/postgres-pvc
+# ==============================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: lingoquesto
+  labels:
+    app: postgres
+    component: database
+spec:
+  # AccessModes define cómo se puede acceder al volumen
+  # - ReadWriteOnce (RWO): Un solo nodo puede montarlo en modo lectura/escritura
+  # - ReadOnlyMany (ROX): Múltiples nodos pueden montarlo en modo solo lectura
+  # - ReadWriteMany (RWX): Múltiples nodos pueden montarlo en lectura/escritura
+  accessModes:
+    - ReadWriteOnce
+
+  # Recursos solicitados
+  resources:
+    requests:
+      storage: 5Gi
+
+  # StorageClass define el proveedor de almacenamiento
+  # 'standard' es la clase por defecto en Minikube
+  # En producción podrías usar: gp2 (AWS), pd-ssd (GCP), etc.
+  storageClassName: standard

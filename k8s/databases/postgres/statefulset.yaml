@@ -1,0 +1,139 @@
+# ==============================================================================
+# STATEFULSET: PostgreSQL Database
+# ==============================================================================
+# Un StatefulSet gestiona Pods con estado (stateful) que necesitan:
+# - Identidad de red estable (mismo nombre DNS)
+# - Almacenamiento persistente
+# - Orden garantizado de despliegue/escalado
+#
+# ¿Por qué StatefulSet y no Deployment?
+# - Las bases de datos necesitan identidad estable
+# - El nombre del Pod siempre será: postgres-0 (predecible)
+# - El almacenamiento se mantiene entre reinicios
+#
+# Comparación:
+# - Deployment: Para apps stateless (frontend, APIs sin estado)
+# - StatefulSet: Para apps stateful (bases de datos, caches persistentes)
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: lingoquesto
+  labels:
+    app: postgres
+    component: database
+spec:
+  # Nombre del Service que gestiona este StatefulSet
+  serviceName: postgres
+
+  # Número de réplicas (1 para desarrollo)
+  # ⚠️ PostgreSQL requiere configuración especial para múltiples réplicas (replicación)
+  replicas: 1
+
+  # Selector para identificar los Pods
+  selector:
+    matchLabels:
+      app: postgres
+      component: database
+
+  # Plantilla del Pod
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        # Imagen oficial de PostgreSQL 16 (Alpine para menor tamaño)
+        image: postgres:16-alpine
+
+        # Puerto que expone PostgreSQL
+        ports:
+        - containerPort: 5432
+          name: postgres
+          protocol: TCP
+
+        # Variables de entorno desde el Secret
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+
+        # Configuraciones adicionales de PostgreSQL
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+
+        # Recursos asignados al contenedor
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # Montaje del volumen persistente
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+
+        # Health checks
+        # livenessProbe: Verifica si el contenedor está vivo
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        # readinessProbe: Verifica si el contenedor está listo para recibir tráfico
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+      # Definición de volúmenes
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+# ==============================================================================
+# Comandos útiles para debugging:
+#
+# Ver logs:
+# kubectl logs postgres-0 -n lingoquesto
+#
+# Conectarse al Pod:
+# kubectl exec -it postgres-0 -n lingoquesto -- psql -U lq-dbuser -d lq-db
+#
+# Ver estado:
+# kubectl get statefulset postgres -n lingoquesto
+# ==============================================================================

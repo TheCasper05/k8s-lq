@@ -1,0 +1,43 @@
+# ==============================================================================
+# SERVICE: Redis
+# ==============================================================================
+# Service ClusterIP para exponer Redis dentro del cluster.
+#
+# Los servicios pueden conectarse usando:
+# - redis:6379 (desde el mismo namespace)
+# - redis.lingoquesto:6379 (desde otro namespace)
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: lingoquesto
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+
+  selector:
+    app: redis
+    component: cache
+
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+
+  sessionAffinity: ClientIP
+
+# ==============================================================================
+# Ejemplos de conexión:
+#
+# Django (REDIS_URL):
+# redis://redis:6379/0
+#
+# FastAPI Realtime Service:
+# REDIS_HOST=redis
+# REDIS_PORT=6379
+# ==============================================================================

@@ -1,0 +1,55 @@
+# ==============================================================================
+# SERVICE: PostgreSQL
+# ==============================================================================
+# Un Service expone un conjunto de Pods a través de una IP y DNS estables.
+#
+# ¿Por qué necesitamos un Service?
+# - Los Pods tienen IPs dinámicas (cambian al reiniciar)
+# - El Service proporciona un DNS estable: postgres.lingoquesto.svc.cluster.local
+# - Otros Pods pueden conectarse usando simplemente: postgres:5432
+#
+# Tipos de Services:
+# - ClusterIP: Solo accesible dentro del cluster (LO QUE USAMOS)
+# - NodePort: Accesible desde fuera usando IP del nodo + puerto
+# - LoadBalancer: Crea un balanceador externo (AWS ELB, etc)
+# - ExternalName: Mapea a un DNS externo
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: lingoquesto
+  labels:
+    app: postgres
+    component: database
+spec:
+  # Tipo de Service
+  # ClusterIP: Solo accesible dentro del cluster (no desde tu máquina local)
+  type: ClusterIP
+
+  # Selector: Encuentra los Pods con estas labels
+  selector:
+    app: postgres
+    component: database
+
+  # Puertos expuestos
+  ports:
+  - name: postgres
+    port: 5432        # Puerto del Service (otros Pods se conectan a este)
+    targetPort: 5432  # Puerto del contenedor (donde PostgreSQL escucha)
+    protocol: TCP
+
+  # sessionAffinity garantiza que las conexiones del mismo cliente
+  # vayan al mismo Pod (útil para conexiones persistentes)
+  sessionAffinity: ClientIP
+
+# ==============================================================================
+# DNS del Service:
+# - Dentro del mismo namespace: postgres
+# - Desde otro namespace: postgres.lingoquesto
+# - Nombre completo (FQDN): postgres.lingoquesto.svc.cluster.local
+#
+# Ejemplo de conexión desde Django:
+# DATABASE_URL=postgresql://lq-dbuser:lq-secure-password-2024@postgres:5432/lq-db
+# ==============================================================================

@@ -1,0 +1,21 @@
+# ==============================================================================
+# NAMESPACE: lingoquesto
+# ==============================================================================
+# Un namespace es como una "carpeta virtual" en Kubernetes que agrupa recursos.
+# Nos permite aislar nuestra aplicación y gestionar permisos más fácilmente.
+#
+# ¿Por qué usamos un namespace?
+# - Aislamiento: Separa recursos de otras aplicaciones
+# - Organización: Todo LingoQuesto en un solo lugar
+# - Seguridad: Podemos aplicar políticas específicas
+# - Multi-ambiente: Podríamos tener namespaces: dev, staging, prod
+# ==============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lingoquesto
+  labels:
+    name: lingoquesto
+    environment: development
+    project: lingoquesto-platform

@@ -1,0 +1,81 @@
+# ==============================================================================
+# CONFIGMAP: Redis Configuration
+# ==============================================================================
+# Un ConfigMap almacena configuración no sensible en formato key-value.
+#
+# ¿ConfigMap vs Secret?
+# - ConfigMap: Datos públicos/configuración (URLs, settings)
+# - Secret: Datos sensibles (passwords, tokens)
+#
+# Este ConfigMap contiene el archivo de configuración de Redis.
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: lingoquesto
+  labels:
+    app: redis
+    component: cache
+data:
+  # Archivo de configuración de Redis (redis.conf)
+  redis.conf: |
+    # ========================================
+    # Redis Configuration for Kubernetes
+    # ========================================
+
+    # Network
+    bind 0.0.0.0
+    port 6379
+    timeout 0
+    tcp-keepalive 60
+
+    # General
+    daemonize no
+    loglevel notice
+
+    # Persistence (RDB - snapshots)
+    # Guarda el dataset en disco cada 15min si hay 1+ cambios
+    save 900 1
+    save 300 10
+    save 60 10000
+
+    # Directorio para archivos de persistencia
+    dir /data
+    dbfilename dump.rdb
+
+    # AOF (Append Only File) - Más durable pero más lento
+    # Deshabilitado para desarrollo
+    appendonly no
+
+    # Memory Management
+    # Máximo de memoria: 256MB (ajustar según necesidad)
+    maxmemory 256mb
+
+    # Política de evicción cuando se alcanza maxmemory
+    # allkeys-lru: Elimina las keys menos usadas recientemente
+    maxmemory-policy allkeys-lru
+
+    # Clients
+    maxclients 10000
+
+    # Security
+    # Sin password para desarrollo local
+    # En producción: requirepass your-strong-password
+    # protected-mode yes
+
+    # Performance
+    # Disable THP (Transparent Huge Pages) support
+    # Esto se hace a nivel de sistema operativo, no aquí
+
+    # Logging
+    # Los logs se envían a stdout para que kubectl los capture
+    logfile ""
+
+# ==============================================================================
+# Para aplicar cambios de configuración:
+# 1. Edita este ConfigMap
+# 2. kubectl apply -f configmap.yaml
+# 3. kubectl rollout restart statefulset/redis -n lingoquesto
+# ==============================================================================

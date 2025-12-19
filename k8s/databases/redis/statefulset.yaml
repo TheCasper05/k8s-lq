@@ -1,0 +1,122 @@
+# ==============================================================================
+# STATEFULSET: Redis Cache
+# ==============================================================================
+# Redis en modo standalone (1 réplica) para desarrollo.
+#
+# Para producción, considera:
+# - Redis Sentinel (alta disponibilidad)
+# - Redis Cluster (sharding/particionamiento)
+# - Operadores como Redis Enterprise
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: lingoquesto
+  labels:
+    app: redis
+    component: cache
+spec:
+  serviceName: redis
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: redis
+      component: cache
+
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: cache
+    spec:
+      containers:
+      - name: redis
+        # Imagen oficial de Redis 7 (Alpine para menor tamaño)
+        image: redis:7-alpine
+
+        # Comando para iniciar Redis con nuestro archivo de configuración
+        command:
+          - redis-server
+          - /usr/local/etc/redis/redis.conf
+
+        ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+
+        # Recursos asignados
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        # Montajes de volúmenes
+        volumeMounts:
+        # Configuración de Redis
+        - name: redis-config
+          mountPath: /usr/local/etc/redis
+          readOnly: true
+
+        # Datos persistentes
+        - name: redis-storage
+          mountPath: /data
+
+        # Health checks
+        # livenessProbe: ¿El contenedor está vivo?
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        # readinessProbe: ¿El contenedor está listo para tráfico?
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+      # Definición de volúmenes
+      volumes:
+      # ConfigMap con la configuración de Redis
+      - name: redis-config
+        configMap:
+          name: redis-config
+          items:
+          - key: redis.conf
+            path: redis.conf
+
+      # PVC para datos persistentes
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+# ==============================================================================
+# Comandos útiles:
+#
+# Ver logs:
+# kubectl logs redis-0 -n lingoquesto
+#
+# Conectarse a Redis CLI:
+# kubectl exec -it redis-0 -n lingoquesto -- redis-cli
+#
+# Verificar configuración:
+# kubectl exec -it redis-0 -n lingoquesto -- redis-cli CONFIG GET maxmemory
+#
+# Ver keys almacenadas:
+# kubectl exec -it redis-0 -n lingoquesto -- redis-cli KEYS '*'
+# ==============================================================================

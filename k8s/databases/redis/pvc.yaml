@@ -1,0 +1,31 @@
+# ==============================================================================
+# PERSISTENT VOLUME CLAIM (PVC): Redis Storage
+# ==============================================================================
+# Almacenamiento persistente para Redis.
+#
+# ¿Por qué Redis necesita persistencia?
+# - Aunque Redis es in-memory, puede guardar snapshots en disco
+# - Esto permite recuperar datos después de reinicios
+# - Configurado con RDB (snapshots periódicos)
+#
+# Tamaño: 2GB es suficiente para desarrollo
+# En producción, dimensionar según uso esperado
+# ==============================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: lingoquesto
+  labels:
+    app: redis
+    component: cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      storage: 2Gi
+
+  storageClassName: standard
