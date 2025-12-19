@@ -1,0 +1,391 @@
+# ==============================================================================
+# DEPLOYMENT: Django Backend
+# ==============================================================================
+# Deployment para el backend Django con GraphQL.
+#
+# Este servicio:
+# - Depende de PostgreSQL y Redis
+# - Ejecuta migraciones automáticamente al iniciar (via entrypoint.sh)
+# - Sirve la API GraphQL en /graphql
+# - Usa Gunicorn con 4 workers
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-backend
+  namespace: lingoquesto
+  labels:
+    app: django-backend
+    component: api
+spec:
+  replicas: 2  # 2 réplicas para alta disponibilidad
+
+  selector:
+    matchLabels:
+      app: django-backend
+      component: api
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: django-backend
+        component: api
+    spec:
+      # ========================================================================
+      # Init Container (Opcional): Esperar a que PostgreSQL esté listo
+      # ========================================================================
+      # Esto asegura que Django no intente conectarse antes de que PG esté listo
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Esperando a PostgreSQL..."
+          until nc -z postgres 5432; do
+            echo "PostgreSQL no está listo aún. Esperando 2 segundos..."
+            sleep 2
+          done
+          echo "PostgreSQL está listo!"
+
+      - name: wait-for-redis
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Esperando a Redis..."
+          until nc -z redis 6379; do
+            echo "Redis no está listo aún. Esperando 2 segundos..."
+            sleep 2
+          done
+          echo "Redis está listo!"
+
+      # ========================================================================
+      # Main Container: Django
+      # ========================================================================
+      containers:
+      - name: django-backend
+        # ======================================================================
+        # Imagen Docker
+        # ======================================================================
+        # ⚠️ IMPORTANTE: Construir y subir imagen
+        #
+        # Opción 1: Registry local de Minikube
+        #   eval $(minikube docker-env)
+        #   docker build -t django-backend:latest ../../../dj-backend-lq-main
+        #   image: django-backend:latest
+        #   imagePullPolicy: Never
+        #
+        # Opción 2: Docker Hub / DigitalOcean Registry
+        #   docker build -t tu-usuario/django-backend:latest ../../../dj-backend-lq-main
+        #   docker push tu-usuario/django-backend:latest
+        #   image: tu-usuario/django-backend:latest
+        # ======================================================================
+        image: django-backend:latest
+        imagePullPolicy: Never
+
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+
+        # ======================================================================
+        # Variables de Entorno
+        # ======================================================================
+        env:
+        # --- Desde Secret (credenciales sensibles) ---
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: SECRET_KEY
+
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: POSTGRES_USER
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: POSTGRES_PASSWORD
+
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: POSTGRES_DB
+
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: GOOGLE_CLIENT_ID
+
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: GOOGLE_SECRET
+
+        - name: MICROSOFT_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: MICROSOFT_CLIENT_ID
+
+        - name: MICROSOFT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: MICROSOFT_SECRET
+
+        - name: LINGOBOT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: LINGOBOT_API_KEY
+
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: JWT_SECRET_KEY
+
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: AWS_ACCESS_KEY_ID
+
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: AWS_SECRET_ACCESS_KEY
+
+        - name: UNSPLASH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: UNSPLASH_API_KEY
+
+        - name: PRONUNCIATION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: PRONUNCIATION_API_KEY
+
+        # --- Desde ConfigMap (configuración pública) ---
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: ENVIRONMENT
+
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: DEBUG
+
+        - name: ALLOWED_HOSTS
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: ALLOWED_HOSTS
+
+        # Database URL (expandirá variables del Secret)
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)?sslmode=disable&options=-c%20search_path%3Dlq"
+
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: REDIS_URL
+
+        - name: REDIS_CACHE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: REDIS_CACHE_URL
+
+        - name: STATIC_ROOT
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: STATIC_ROOT
+
+        - name: STATIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: STATIC_URL
+
+        - name: MEDIA_ROOT
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: MEDIA_ROOT
+
+        - name: MEDIA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: MEDIA_URL
+
+        - name: STORAGES_DEFAULT_BACKEND
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: STORAGES_DEFAULT_BACKEND
+
+        - name: ENDPOINT_URL_FRONTEND
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: ENDPOINT_URL_FRONTEND
+
+        - name: ENDPOINT_URL_FRONTEND_ST
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: ENDPOINT_URL_FRONTEND_ST
+
+        - name: WEBSOCKET_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: WEBSOCKET_URL
+
+        - name: CORS_ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: CORS_ALLOWED_ORIGINS
+
+        - name: CSRF_TRUSTED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: CSRF_TRUSTED_ORIGINS
+
+        - name: EMAIL_URL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: EMAIL_URL
+
+        - name: DEFAULT_FROM_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: DEFAULT_FROM_EMAIL
+
+        - name: LINGOBOT_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: LINGOBOT_ADDRESS
+
+        - name: REALTIME_JWT_ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: REALTIME_JWT_ALGORITHM
+
+        - name: REALTIME_JWT_EXPIRATION_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: REALTIME_JWT_EXPIRATION_MINUTES
+
+        - name: HEADLESS_SERVE_SPECIFICATION
+          valueFrom:
+            configMapKeyRef:
+              name: django-backend-config
+              key: HEADLESS_SERVE_SPECIFICATION
+
+        # ======================================================================
+        # Resources
+        # ======================================================================
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+        # ======================================================================
+        # Health Checks
+        # ======================================================================
+        # Django tarda más en iniciar (migraciones + collectstatic)
+        livenessProbe:
+          httpGet:
+            path: /health  # Asegúrate de tener este endpoint
+            port: 8000
+          initialDelaySeconds: 60  # Espera 60s para migraciones
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # ======================================================================
+        # Volume Mounts (para static/media files)
+        # ======================================================================
+        volumeMounts:
+        - name: static-files
+          mountPath: /app/static
+        - name: media-files
+          mountPath: /app/media
+
+      # ========================================================================
+      # Volumes
+      # ========================================================================
+      volumes:
+      # EmptyDir: Se borra cuando el Pod se elimina
+      # Para producción, usa PVC si necesitas persistencia
+      - name: static-files
+        emptyDir: {}
+      - name: media-files
+        emptyDir: {}
+
+# ==============================================================================
+# Comandos útiles:
+#
+# Ver Pods:
+# kubectl get pods -n lingoquesto -l app=django-backend
+#
+# Ver logs (con migraciones):
+# kubectl logs -f deployment/django-backend -n lingoquesto
+#
+# Ejecutar comando de Django:
+# kubectl exec -it deployment/django-backend -n lingoquesto -- python manage.py createsuperuser
+#
+# Ejecutar shell de Django:
+# kubectl exec -it deployment/django-backend -n lingoquesto -- python manage.py shell
+#
+# Ver variables de entorno:
+# kubectl exec -it deployment/django-backend -n lingoquesto -- env | grep DATABASE
+# ==============================================================================

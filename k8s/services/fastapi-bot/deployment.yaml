@@ -1,0 +1,272 @@
+# ==============================================================================
+# DEPLOYMENT: FastAPI Bot
+# ==============================================================================
+# Deployment para el servicio lq-bot (LingoBot).
+#
+# ¿Por qué Deployment y no StatefulSet?
+# - Este servicio es STATELESS (no mantiene estado entre requests)
+# - Puede tener múltiples réplicas funcionando en paralelo
+# - Fácil de escalar horizontalmente
+#
+# Conceptos que aprenderás:
+# - Deployments con múltiples replicas
+# - Liveness y Readiness probes
+# - Resource limits y requests
+# - Variables de entorno desde ConfigMaps y Secrets
+# - Estrategias de rolling updates
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-bot
+  namespace: lingoquesto
+  labels:
+    app: fastapi-bot
+    component: api
+spec:
+  # ============================================================================
+  # Replicas
+  # ============================================================================
+  # Número de Pods corriendo simultáneamente
+  # Para desarrollo: 1 réplica
+  # Para producción: 2-3 réplicas (alta disponibilidad)
+  replicas: 1
+
+  # ============================================================================
+  # Selector
+  # ============================================================================
+  # Identifica qué Pods pertenecen a este Deployment
+  selector:
+    matchLabels:
+      app: fastapi-bot
+      component: api
+
+  # ============================================================================
+  # Estrategia de Actualización
+  # ============================================================================
+  # RollingUpdate: Actualiza Pods gradualmente sin downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Máximo 1 Pod extra durante el update
+      maxUnavailable: 0  # Siempre mantener al menos 1 Pod disponible
+
+  # ============================================================================
+  # Template del Pod
+  # ============================================================================
+  template:
+    metadata:
+      labels:
+        app: fastapi-bot
+        component: api
+    spec:
+      containers:
+      - name: fastapi-bot
+        # ======================================================================
+        # Imagen Docker
+        # ======================================================================
+        # ⚠️ IMPORTANTE: Debes construir y subir esta imagen a un registry
+        #
+        # Opción 1: Usar el registry local de Minikube
+        #   eval $(minikube docker-env)
+        #   docker build -t lq-bot:latest ../../../lq-bot-main
+        #   image: lq-bot:latest
+        #   imagePullPolicy: Never
+        #
+        # Opción 2: Usar Docker Hub
+        #   docker build -t tu-usuario/lq-bot:latest ../../../lq-bot-main
+        #   docker push tu-usuario/lq-bot:latest
+        #   image: tu-usuario/lq-bot:latest
+        #
+        # Opción 3: Usar DigitalOcean Registry (como en tu README)
+        #   image: registry.digitalocean.com/lq-registry/lq-bot:latest
+        # ======================================================================
+        image: lq-bot:latest
+        imagePullPolicy: Never  # Cambia a IfNotPresent si usas registry externo
+
+        # ======================================================================
+        # Puertos
+        # ======================================================================
+        ports:
+        - name: http
+          containerPort: 8081
+          protocol: TCP
+
+        # ======================================================================
+        # Variables de Entorno
+        # ======================================================================
+        env:
+        # Desde ConfigMap (configuración pública)
+        - name: LQBOT_APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_APP_NAME
+
+        - name: LQBOT_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_ENVIRONMENT
+
+        - name: LQBOT_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_LOG_LEVEL
+
+        # LLM Provider
+        - name: LQBOT_LLM_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_LLM_PROVIDER
+
+        - name: LQBOT_OPENAI_LLM_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_OPENAI_LLM_MODEL
+
+        # TTS Provider
+        - name: LQBOT_TTS_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_TTS_PROVIDER
+
+        - name: LQBOT_OPENAI_TTS_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_OPENAI_TTS_MODEL
+
+        - name: LQBOT_OPENAI_TTS_VOICE
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_OPENAI_TTS_VOICE
+
+        # STT Provider
+        - name: LQBOT_STT_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_STT_PROVIDER
+
+        - name: LQBOT_OPENAI_STT_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_OPENAI_STT_MODEL
+
+        # ElevenLabs settings
+        - name: LQBOT_ELEVENLABS_VOICE_ID
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_ELEVENLABS_VOICE_ID
+
+        - name: LQBOT_ELEVENLABS_TTS_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_ELEVENLABS_TTS_MODEL
+
+        - name: LQBOT_ELEVENLABS_STT_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_ELEVENLABS_STT_MODEL
+
+        - name: LQBOT_ELEVENLABS_STT_LANGUAGE
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-bot-config
+              key: LQBOT_ELEVENLABS_STT_LANGUAGE
+
+        # Desde Secret (API keys sensibles)
+        - name: LQBOT_OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-bot-secret
+              key: LQBOT_OPENAI_API_KEY
+
+        - name: LQBOT_ELEVENLABS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-bot-secret
+              key: LQBOT_ELEVENLABS_API_KEY
+
+        - name: LQBOT_GROK_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-bot-secret
+              key: LQBOT_GROK_API_KEY
+
+        # ======================================================================
+        # Resource Limits
+        # ======================================================================
+        # Controla cuánta CPU y memoria puede usar este contenedor
+        #
+        # requests: Lo que K8s GARANTIZA asignar
+        # limits: Máximo que puede usar (si excede, se reinicia)
+        #
+        # Unidades:
+        # - CPU: "100m" = 0.1 cores, "1" = 1 core completo
+        # - Memory: "256Mi" = 256 MiB, "1Gi" = 1 GiB
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # ======================================================================
+        # Health Checks
+        # ======================================================================
+        # livenessProbe: ¿El contenedor está vivo?
+        # Si falla 3 veces seguidas, K8s reinicia el Pod
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 30   # Espera 30s antes del primer check
+          periodSeconds: 10          # Check cada 10s
+          timeoutSeconds: 5          # Timeout de 5s por request
+          failureThreshold: 3        # 3 fallos = reinicio
+
+        # readinessProbe: ¿El contenedor está listo para recibir tráfico?
+        # Si falla, K8s deja de enviar requests a este Pod
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+# ==============================================================================
+# Comandos útiles:
+#
+# Ver Pods:
+# kubectl get pods -n lingoquesto -l app=fastapi-bot
+#
+# Ver logs:
+# kubectl logs -f deployment/fastapi-bot -n lingoquesto
+#
+# Escalar réplicas:
+# kubectl scale deployment/fastapi-bot --replicas=2 -n lingoquesto
+#
+# Reiniciar (rolling restart):
+# kubectl rollout restart deployment/fastapi-bot -n lingoquesto
+#
+# Ver historial de despliegues:
+# kubectl rollout history deployment/fastapi-bot -n lingoquesto
+#
+# Hacer rollback a versión anterior:
+# kubectl rollout undo deployment/fastapi-bot -n lingoquesto
+# ==============================================================================

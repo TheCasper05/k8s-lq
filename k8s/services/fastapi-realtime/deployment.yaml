@@ -1,0 +1,303 @@
+# ==============================================================================
+# DEPLOYMENT: FastAPI Realtime - WebSocket Service
+# ==============================================================================
+# Servicio de WebSockets escalable (1k-100k+ conexiones).
+# CRÍTICO: Depende de Redis para pub/sub entre instancias.
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-realtime
+  namespace: lingoquesto
+  labels:
+    app: fastapi-realtime
+    component: websocket
+spec:
+  # Solo 1 worker por instancia (WebSocket es stateful en memoria)
+  # Para escalar, aumenta réplicas (no workers)
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: fastapi-realtime
+      component: websocket
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: fastapi-realtime
+        component: websocket
+    spec:
+      # Esperar a que Redis esté listo
+      initContainers:
+      - name: wait-for-redis
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Esperando a Redis..."
+          until nc -z redis 6379; do
+            sleep 2
+          done
+          echo "Redis está listo!"
+
+      containers:
+      - name: fastapi-realtime
+        # ======================================================================
+        # Imagen Docker
+        # ======================================================================
+        # Construir imagen:
+        # eval $(minikube docker-env)
+        # cd ../../../lq-realtime-service-main
+        # docker build -t fastapi-realtime:latest .
+        # ======================================================================
+        image: fastapi-realtime:latest
+        imagePullPolicy: Never
+
+        ports:
+        - name: http
+          containerPort: 8082
+          protocol: TCP
+
+        # ======================================================================
+        # Variables de Entorno
+        # ======================================================================
+        env:
+        # Desde Secret
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-realtime-secret
+              key: JWT_SECRET_KEY
+
+        - name: SYSTEM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-realtime-secret
+              key: SYSTEM_API_KEY
+
+        # Desde ConfigMap
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: APP_NAME
+
+        - name: APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: APP_VERSION
+
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: ENVIRONMENT
+
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: DEBUG
+
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: HOST
+
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: PORT
+
+        - name: WORKERS
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WORKERS
+
+        # Redis Configuration
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_HOST
+
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_PORT
+
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_DB
+
+        - name: REDIS_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_PASSWORD
+
+        - name: REDIS_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_SSL
+
+        - name: REDIS_MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: REDIS_MAX_CONNECTIONS
+
+        # JWT Configuration
+        - name: JWT_ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: JWT_ALGORITHM
+
+        - name: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+
+        # WebSocket Configuration
+        - name: WS_MAX_CONNECTIONS_PER_INSTANCE
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WS_MAX_CONNECTIONS_PER_INSTANCE
+
+        - name: WS_HEARTBEAT_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WS_HEARTBEAT_INTERVAL
+
+        - name: WS_MESSAGE_MAX_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WS_MESSAGE_MAX_SIZE
+
+        # Webhook Configuration
+        - name: WEBHOOK_MAX_RETRIES
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WEBHOOK_MAX_RETRIES
+
+        - name: WEBHOOK_RETRY_DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WEBHOOK_RETRY_DELAY
+
+        - name: WEBHOOK_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: WEBHOOK_TIMEOUT
+
+        # Security
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: ALLOWED_ORIGINS
+
+        - name: CORS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: CORS_ENABLED
+
+        # Logging
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: LOG_LEVEL
+
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: LOG_FORMAT
+
+        # Metrics
+        - name: METRICS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: METRICS_ENABLED
+
+        - name: HEALTH_CHECK_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: fastapi-realtime-config
+              key: HEALTH_CHECK_PATH
+
+        # ======================================================================
+        # Resource Limits
+        # ======================================================================
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # ======================================================================
+        # Health Checks
+        # ======================================================================
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+# ==============================================================================
+# Comandos útiles:
+#
+# Ver Pods:
+# kubectl get pods -n lingoquesto -l app=fastapi-realtime
+#
+# Ver logs:
+# kubectl logs -f deployment/fastapi-realtime -n lingoquesto
+#
+# Escalar réplicas (para más conexiones simultáneas):
+# kubectl scale deployment/fastapi-realtime --replicas=3 -n lingoquesto
+#
+# Port-forward para pruebas locales:
+# kubectl port-forward -n lingoquesto svc/fastapi-realtime 8082:8082
+# ==============================================================================

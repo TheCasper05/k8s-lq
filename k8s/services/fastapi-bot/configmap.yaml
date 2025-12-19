@@ -1,0 +1,70 @@
+# ==============================================================================
+# CONFIGMAP: FastAPI Bot - Configuration
+# ==============================================================================
+# Variables de entorno no sensibles para el servicio lq-bot.
+#
+# Este servicio NO depende de PostgreSQL ni Redis, solo de APIs externas.
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-bot-config
+  namespace: lingoquesto
+  labels:
+    app: fastapi-bot
+    component: api
+data:
+  # ============================================================================
+  # App Configuration
+  # ============================================================================
+  LQBOT_APP_NAME: "lq-bot"
+  LQBOT_ENVIRONMENT: "production"
+  LQBOT_LOG_LEVEL: "INFO"
+
+  # ============================================================================
+  # LLM Provider Configuration
+  # ============================================================================
+  # Proveedor por defecto: openai o grok
+  LQBOT_LLM_PROVIDER: "openai"
+
+  # OpenAI LLM Settings
+  LQBOT_OPENAI_LLM_MODEL: "gpt-4o-mini"
+
+  # Grok (X.AI) LLM Settings
+  LQBOT_GROK_LLM_MODEL: "grok-beta"
+  LQBOT_GROK_BASE_URL: "https://api.x.ai/v1"
+
+  # ============================================================================
+  # TTS (Text-to-Speech) Provider Configuration
+  # ============================================================================
+  # Proveedor por defecto: openai o elevenlabs
+  LQBOT_TTS_PROVIDER: "openai"
+
+  # OpenAI TTS Settings
+  LQBOT_OPENAI_TTS_MODEL: "tts-1"
+  LQBOT_OPENAI_TTS_VOICE: "alloy"
+
+  # ElevenLabs TTS Settings
+  LQBOT_ELEVENLABS_VOICE_ID: "21m00Tcm4TlvDq8ikWAM"
+  LQBOT_ELEVENLABS_TTS_MODEL: "eleven_multilingual_v2"
+
+  # ============================================================================
+  # STT (Speech-to-Text) Provider Configuration
+  # ============================================================================
+  # Proveedor por defecto: openai o elevenlabs
+  LQBOT_STT_PROVIDER: "openai"
+
+  # OpenAI STT (Whisper) Settings
+  LQBOT_OPENAI_STT_MODEL: "whisper-1"
+
+  # ElevenLabs STT (Scribe) Settings
+  LQBOT_ELEVENLABS_STT_MODEL: "scribe-v2-realtime"
+  LQBOT_ELEVENLABS_STT_LANGUAGE: "en"
+
+# ==============================================================================
+# Para cambiar la configuración:
+# 1. Edita este archivo
+# 2. kubectl apply -f configmap.yaml
+# 3. kubectl rollout restart deployment/fastapi-bot -n lingoquesto
+# ==============================================================================

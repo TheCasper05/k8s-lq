@@ -1,0 +1,30 @@
+# ==============================================================================
+# SERVICE: Frontend Student-Teacher
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-student-teacher
+  namespace: lingoquesto
+  labels:
+    app: frontend-student-teacher
+    component: frontend
+spec:
+  type: ClusterIP
+
+  selector:
+    app: frontend-student-teacher
+    component: frontend
+
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+
+  sessionAffinity: None
+
+# ==============================================================================
+# Endpoint: http://frontend-student-teacher:3000
+# ==============================================================================

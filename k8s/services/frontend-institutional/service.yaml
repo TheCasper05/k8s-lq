@@ -1,0 +1,31 @@
+# ==============================================================================
+# SERVICE: Frontend Institutional
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-institutional
+  namespace: lingoquesto
+  labels:
+    app: frontend-institutional
+    component: frontend
+spec:
+  type: ClusterIP
+
+  selector:
+    app: frontend-institutional
+    component: frontend
+
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+
+  sessionAffinity: None
+
+# ==============================================================================
+# Endpoint: http://frontend-institutional
+# (Puerto 80, no hace falta especificarlo)
+# ==============================================================================

@@ -1,0 +1,61 @@
+# ==============================================================================
+# SERVICE: FastAPI Bot
+# ==============================================================================
+# Service ClusterIP para exponer el servicio lq-bot dentro del cluster.
+#
+# Otros servicios (como Django) pueden llamar a este servicio usando:
+# - http://fastapi-bot:8081 (desde el mismo namespace)
+# - http://fastapi-bot.lingoquesto:8081 (desde otro namespace)
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-bot
+  namespace: lingoquesto
+  labels:
+    app: fastapi-bot
+    component: api
+spec:
+  # ============================================================================
+  # Tipo de Service
+  # ============================================================================
+  # ClusterIP: Solo accesible dentro del cluster
+  # No necesitamos acceso externo directo (Django actúa como proxy)
+  type: ClusterIP
+
+  # ============================================================================
+  # Selector
+  # ============================================================================
+  # Encuentra todos los Pods con estas labels
+  selector:
+    app: fastapi-bot
+    component: api
+
+  # ============================================================================
+  # Puertos
+  # ============================================================================
+  ports:
+  - name: http
+    port: 8081         # Puerto del Service (lo que otros servicios usan)
+    targetPort: 8081   # Puerto del contenedor (donde FastAPI escucha)
+    protocol: TCP
+
+  # ============================================================================
+  # Session Affinity
+  # ============================================================================
+  # ClientIP: Mismo cliente siempre va al mismo Pod (útil para sticky sessions)
+  # None: Balancea cada request (recomendado para APIs stateless)
+  sessionAffinity: None
+
+# ==============================================================================
+# Endpoint interno:
+# http://fastapi-bot:8081
+#
+# Ejemplo de uso desde Django:
+# LINGOBOT_ADDRESS=http://fastapi-bot:8081
+#
+# Para probar desde tu máquina (port-forward):
+# kubectl port-forward -n lingoquesto svc/fastapi-bot 8081:8081
+# curl http://localhost:8081/health
+# ==============================================================================

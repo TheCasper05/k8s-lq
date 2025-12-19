@@ -1,0 +1,47 @@
+# ==============================================================================
+# SERVICE: Django Backend
+# ==============================================================================
+# Service para exponer la API GraphQL de Django.
+#
+# Accesible internamente como:
+# - http://django-backend:8000
+# - http://django-backend:8000/graphql (GraphQL endpoint)
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-backend
+  namespace: lingoquesto
+  labels:
+    app: django-backend
+    component: api
+spec:
+  type: ClusterIP
+
+  selector:
+    app: django-backend
+    component: api
+
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+
+  # sessionAffinity para mantener sesiones (útil para Django admin)
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 horas
+
+# ==============================================================================
+# Endpoints internos:
+# - GraphQL: http://django-backend:8000/graphql
+# - Admin: http://django-backend:8000/admin
+# - Health: http://django-backend:8000/health
+#
+# Para acceder desde tu máquina (port-forward):
+# kubectl port-forward -n lingoquesto svc/django-backend 8000:8000
+# Luego abre: http://localhost:8000/graphql
+# ==============================================================================

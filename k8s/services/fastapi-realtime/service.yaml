@@ -1,0 +1,35 @@
+# ==============================================================================
+# SERVICE: FastAPI Realtime - WebSocket
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-realtime
+  namespace: lingoquesto
+  labels:
+    app: fastapi-realtime
+    component: websocket
+spec:
+  type: ClusterIP
+
+  selector:
+    app: fastapi-realtime
+    component: websocket
+
+  ports:
+  - name: http
+    port: 8082
+    targetPort: 8082
+    protocol: TCP
+
+  # ClientIP affinity para WebSockets (sticky sessions)
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600  # 1 hora
+
+# ==============================================================================
+# WebSocket Endpoint: ws://fastapi-realtime:8082/ws
+# Health Check: http://fastapi-realtime:8082/health
+# ==============================================================================

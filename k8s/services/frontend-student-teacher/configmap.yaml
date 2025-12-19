@@ -1,0 +1,31 @@
+# ==============================================================================
+# CONFIGMAP: Frontend Student-Teacher (Nuxt 4)
+# ==============================================================================
+# ⚠️ IMPORTANTE: Variables NUXT_PUBLIC_* se embeben en BUILD TIME
+# Si cambias estas URLs, necesitas reconstruir la imagen
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-student-teacher-config
+  namespace: lingoquesto
+  labels:
+    app: frontend-student-teacher
+    component: frontend
+data:
+  # GraphQL Backend URLs
+  NUXT_PUBLIC_API_BASE_URL: "http://django-backend:8000"
+  NUXT_PUBLIC_GRAPHQL_ENDPOINT: "http://django-backend:8000/graphql/"
+  NUXT_PUBLIC_GRAPHQL_WS_ENDPOINT: "ws://django-backend:8000/graphql/"
+
+  # Storage URLs (DigitalOcean Spaces)
+  NUXT_PUBLIC_STORAGE_URL: "https://lq-storage-qa.nyc3.digitaloceanspaces.com"
+  NUXT_PUBLIC_STORAGE_CDN_URL: "https://lq-storage-qa.nyc3.cdn.digitaloceanspaces.com"
+
+  # Environment
+  NODE_ENV: "production"
+
+  # Sentry (opcional - deja vacío si no usas)
+  NUXT_PUBLIC_SENTRY_DSN: ""
+  NUXT_PUBLIC_SENTRY_ENVIRONMENT: "production"

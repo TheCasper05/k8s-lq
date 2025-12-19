@@ -1,0 +1,83 @@
+# ==============================================================================
+# DEPLOYMENT: Frontend Institutional (Vue 3 + Vite + Nginx)
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-institutional
+  namespace: lingoquesto
+  labels:
+    app: frontend-institutional
+    component: frontend
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: frontend-institutional
+      component: frontend
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: frontend-institutional
+        component: frontend
+    spec:
+      containers:
+      - name: frontend-institutional
+        # ======================================================================
+        # Imagen Docker
+        # ======================================================================
+        # ⚠️ IMPORTANTE: Construir desde el MONOREPO raíz
+        #
+        # cd ../../../frontend-lq-main
+        # eval $(minikube docker-env)
+        # docker build -f apps/institutional/Dockerfile -t frontend-institutional:latest .
+        # ======================================================================
+        image: frontend-institutional:latest
+        imagePullPolicy: Never
+
+        ports:
+        - name: http
+          containerPort: 80  # Nginx escucha en puerto 80
+          protocol: TCP
+
+        # Este frontend usa Nginx (SPA estático)
+        # Variables de entorno solo se usan en BUILD TIME
+        env:
+        - name: NODE_ENV
+          value: "production"
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+        # Health checks (Nginx responde en /)
+        livenessProbe:
+          httpGet:
+            path: /health  # Definido en nginx.conf
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
