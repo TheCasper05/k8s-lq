@@ -79,21 +79,6 @@ docker images | grep frontend-student-teacher
 
 ---
 
-### 5. Frontend Institutional (Vue 3 + Nginx)
-
-```bash
-# Desde la raíz del MONOREPO frontend
-cd ../frontend-lq-main
-
-# ⚠️ IMPORTANTE: Construir desde la raíz del monorepo
-docker build -f apps/institutional/Dockerfile -t frontend-institutional:latest .
-
-# Verificar
-docker images | grep frontend-institutional
-```
-
----
-
 ## 🚀 Script Automatizado
 
 Puedes usar este script para construir todas las imágenes de una vez:
@@ -110,24 +95,20 @@ eval $(minikube docker-env)
 echo "🐳 Construyendo imágenes Docker para Minikube..."
 
 # FastAPI Bot
-echo "📦 1/5 - Construyendo lq-bot..."
+echo "📦 1/4 - Construyendo lq-bot..."
 cd lq-bot-main && docker build -t lq-bot:latest . && cd ..
 
 # Django Backend
-echo "📦 2/5 - Construyendo django-backend..."
+echo "📦 2/4 - Construyendo django-backend..."
 cd dj-backend-lq-main && docker build -t django-backend:latest . && cd ..
 
 # FastAPI Realtime
-echo "📦 3/5 - Construyendo fastapi-realtime..."
+echo "📦 3/4 - Construyendo fastapi-realtime..."
 cd lq-realtime-service-main && docker build -t fastapi-realtime:latest . && cd ..
 
 # Frontend Student-Teacher
-echo "📦 4/5 - Construyendo frontend-student-teacher..."
+echo "📦 4/4 - Construyendo frontend-student-teacher..."
 cd frontend-lq-main && docker build -f apps/student-teacher/Dockerfile -t frontend-student-teacher:latest . && cd ..
-
-# Frontend Institutional
-echo "📦 5/5 - Construyendo frontend-institutional..."
-cd frontend-lq-main && docker build -f apps/institutional/Dockerfile -t frontend-institutional:latest . && cd ..
 
 echo "✅ Todas las imágenes construidas!"
 docker images | grep -E "lq-bot|django-backend|fastapi-realtime|frontend"
@@ -153,7 +134,6 @@ docker images | grep -E "lq-bot|django-backend|fastapi-realtime|frontend"
 # django-backend            latest
 # fastapi-realtime          latest
 # frontend-student-teacher  latest
-# frontend-institutional    latest
 ```
 
 ---

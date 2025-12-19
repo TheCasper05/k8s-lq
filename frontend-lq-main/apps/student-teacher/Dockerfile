@@ -34,10 +34,12 @@ COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Copy source code
-COPY turbo.json tsconfig.json ./
+COPY turbo.json tsconfig.json codegen.yml ./
 COPY apps/student-teacher ./apps/student-teacher
 
 # Build the application
+# Note: GraphQL types must be generated locally before building the Docker image
+# Run: pnpm run graphql:codegen (with backend running)
 RUN pnpm turbo run build --filter=@lq/student-teacher
 
 # ========================================

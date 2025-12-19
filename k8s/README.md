@@ -73,8 +73,7 @@ k8s/
 │   ├── django-backend/         # (Próximamente)
 │   ├── fastapi-bot/            # (Próximamente)
 │   ├── fastapi-realtime/       # (Próximamente)
-│   ├── frontend-student-teacher/
-│   └── frontend-institutional/
+│   └── frontend-student-teacher/
 │
 ├── ingress/
 │   └── ingress-rules.yaml      # (Próximamente)
@@ -138,7 +137,6 @@ Todos los servicios en el namespace `lingoquesto` pueden comunicarse usando:
 | FastAPI Bot | `fastapi-bot` | `fastapi-bot.lingoquesto.svc.cluster.local` |
 | FastAPI Realtime | `fastapi-realtime` | `fastapi-realtime.lingoquesto.svc.cluster.local` |
 | Frontend Student | `frontend-student-teacher` | `frontend-student-teacher.lingoquesto.svc.cluster.local` |
-| Frontend Institutional | `frontend-institutional` | `frontend-institutional.lingoquesto.svc.cluster.local` |
 
 ---
 

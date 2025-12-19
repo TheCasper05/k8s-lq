@@ -163,6 +163,18 @@ spec:
               name: django-backend-secret
               key: JWT_SECRET_KEY
 
+        - name: REALTIME_JWT_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: REALTIME_JWT_PRIVATE_KEY
+
+        - name: REALTIME_JWT_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-backend-secret
+              key: REALTIME_JWT_PUBLIC_KEY
+
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
