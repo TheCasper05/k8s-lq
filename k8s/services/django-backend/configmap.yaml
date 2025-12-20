@@ -16,8 +16,8 @@ data:
   # ============================================================================
   # Environment
   # ============================================================================
-  ENVIRONMENT: "production"
-  DEBUG: "False"  # ⚠️ SIEMPRE False en K8s
+  ENVIRONMENT: "development"
+  DEBUG: "True"  # True para desarrollo local/Minikube
   ALLOWED_HOSTS: "*"  # En producción, especifica dominios exactos
 
   # ============================================================================
