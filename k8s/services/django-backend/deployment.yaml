@@ -347,7 +347,7 @@ spec:
         # Django tarda más en iniciar (migraciones + collectstatic)
         livenessProbe:
           httpGet:
-            path: /health  # Asegúrate de tener este endpoint
+            path: /health/  # Health check endpoint
             port: 8000
           initialDelaySeconds: 60  # Espera 60s para migraciones
           periodSeconds: 10
@@ -356,7 +356,7 @@ spec:
 
         readinessProbe:
           httpGet:
-            path: /health
+            path: /health/
             port: 8000
           initialDelaySeconds: 30
           periodSeconds: 5

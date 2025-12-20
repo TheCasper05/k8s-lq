@@ -8,7 +8,7 @@ import { defineNuxtConfig } from "nuxt/config";
  * Registers global PrimeVue components
  */
 export default defineNuxtConfig({
-  ssr: false,
+  ssr: true,  // Enable SSR for Docker deployment
   modules: [
     "@nuxtjs/tailwindcss",
     "@nuxtjs/tailwindcss",
@@ -99,7 +99,7 @@ export default defineNuxtConfig({
 
   // Security headers
   nitro: {
-    preset: "static",
+    preset: "node-server",
     routeRules: {
       "/**": {
         headers: {
