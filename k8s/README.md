@@ -70,13 +70,31 @@ k8s/
 │       └── service.yaml        # Service (redis:6379)
 │
 ├── services/
-│   ├── django-backend/         # (Próximamente)
-│   ├── fastapi-bot/            # (Próximamente)
-│   ├── fastapi-realtime/       # (Próximamente)
+│   ├── django-backend/
+│   │   ├── secret.yaml         # Credenciales Django + JWT keys
+│   │   ├── configmap.yaml      # Configuración Django (CORS, DB, etc.)
+│   │   ├── deployment.yaml     # Django Backend Deployment (2 replicas)
+│   │   └── service.yaml        # Service (django-backend:8000)
+│   │
+│   ├── fastapi-bot/
+│   │   ├── secret.yaml         # API keys para LLMs
+│   │   ├── configmap.yaml      # Configuración Bot
+│   │   ├── deployment.yaml     # Bot Deployment (1 replica)
+│   │   └── service.yaml        # Service (fastapi-bot:8081)
+│   │
+│   ├── fastapi-realtime/
+│   │   ├── secret.yaml         # JWT keys
+│   │   ├── configmap.yaml      # Configuración WebSocket
+│   │   ├── deployment.yaml     # Realtime Deployment (1 replica)
+│   │   └── service.yaml        # Service (fastapi-realtime:8082)
+│   │
 │   └── frontend-student-teacher/
+│       ├── configmap.yaml      # Configuración Frontend
+│       ├── deployment.yaml     # Frontend Deployment (2 replicas, SSR)
+│       └── service.yaml        # Service (frontend-student-teacher:3000)
 │
 ├── ingress/
-│   └── ingress-rules.yaml      # (Próximamente)
+│   └── ingress-rules.yaml      # Ingress NGINX para todos los servicios
 │
 └── README.md                    # Este archivo
 ```
@@ -138,9 +156,41 @@ Todos los servicios en el namespace `lingoquesto` pueden comunicarse usando:
 | FastAPI Realtime | `fastapi-realtime` | `fastapi-realtime.lingoquesto.svc.cluster.local` |
 | Frontend Student | `frontend-student-teacher` | `frontend-student-teacher.lingoquesto.svc.cluster.local` |
 
+**Puertos de los servicios:**
+
+| Servicio | Puerto Interno | URL Ingress |
+|----------|----------------|-------------|
+| Django Backend | 8000 | http://api.lingoquesto.local |
+| FastAPI Bot | 8081 | http://bot.lingoquesto.local |
+| FastAPI Realtime | 8082 | http://realtime.lingoquesto.local |
+| Frontend | 3000 | http://lingoquesto.local |
+
 ---
 
-## 🚀 Despliegue
+## 🚀 Despliegue Completo
+
+### Opción 1: Despliegue Rápido con Scripts
+
+```bash
+# Desde el directorio k8s/
+
+# 1. Desplegar bases de datos
+./deploy-databases.sh
+
+# 2. Crear schema de PostgreSQL
+kubectl exec -n lingoquesto postgres-0 -- psql -U lq-dbuser -d lq-db -c "CREATE SCHEMA IF NOT EXISTS lq;"
+
+# 3. Desplegar servicios
+./deploy-services.sh
+
+# 4. Aplicar Ingress
+kubectl apply -f ingress/ingress-rules.yaml
+
+# 5. Configurar /etc/hosts
+echo "$(minikube ip) lingoquesto.local api.lingoquesto.local bot.lingoquesto.local realtime.lingoquesto.local" | sudo tee -a /etc/hosts
+```
+
+### Opción 2: Despliegue Manual
 
 ### Fase 1: Desplegar Bases de Datos
 
@@ -202,6 +252,101 @@ kubectl get all -n lingoquesto
 # - 2 Services (postgres, redis)
 # - 2 StatefulSets (postgres, redis)
 # - 2 PVCs (postgres-pvc, redis-pvc)
+```
+
+### Fase 2: Desplegar Servicios de Aplicación
+
+#### Paso 1: Construir Imágenes Docker
+
+Ver [BUILD_IMAGES.md](BUILD_IMAGES.md) para instrucciones detalladas.
+
+```bash
+# Activar Docker de Minikube
+eval $(minikube docker-env)
+
+# Construir imágenes
+docker build -t django-backend:latest ../dj-backend-lq-main
+docker build -t lq-bot:latest ../lq-bot-main
+docker build -t fastapi-realtime:latest ../lq-realtime-service-main
+docker build -t frontend-student-teacher:latest -f ../frontend-lq-main/apps/student-teacher/Dockerfile ../frontend-lq-main
+```
+
+#### Paso 2: Desplegar Django Backend
+
+```bash
+kubectl apply -f services/django-backend/secret.yaml
+kubectl apply -f services/django-backend/configmap.yaml
+kubectl apply -f services/django-backend/deployment.yaml
+kubectl apply -f services/django-backend/service.yaml
+
+# Verificar
+kubectl get pods -n lingoquesto -l app=django-backend
+kubectl logs -f deployment/django-backend -n lingoquesto
+```
+
+#### Paso 3: Desplegar FastAPI Services
+
+```bash
+# Bot
+kubectl apply -f services/fastapi-bot/
+
+# Realtime
+kubectl apply -f services/fastapi-realtime/
+
+# Verificar
+kubectl get pods -n lingoquesto | grep fastapi
+```
+
+#### Paso 4: Desplegar Frontend
+
+```bash
+kubectl apply -f services/frontend-student-teacher/
+
+# Verificar
+kubectl get pods -n lingoquesto -l app=frontend-student-teacher
+```
+
+### Fase 3: Configurar Acceso Externo
+
+#### Paso 1: Habilitar Ingress en Minikube
+
+```bash
+minikube addons enable ingress
+```
+
+#### Paso 2: Aplicar Ingress Rules
+
+```bash
+kubectl apply -f ingress/ingress-rules.yaml
+
+# Verificar
+kubectl get ingress -n lingoquesto
+```
+
+#### Paso 3: Configurar /etc/hosts
+
+```bash
+# Obtener IP de Minikube
+minikube ip
+
+# Agregar entradas a /etc/hosts
+echo "$(minikube ip) lingoquesto.local api.lingoquesto.local bot.lingoquesto.local realtime.lingoquesto.local" | sudo tee -a /etc/hosts
+```
+
+#### Paso 4: Verificar Acceso
+
+```bash
+# Health checks
+curl http://api.lingoquesto.local/health/
+curl http://bot.lingoquesto.local/health
+curl http://realtime.lingoquesto.local/health
+curl -I http://lingoquesto.local
+
+# URLs de acceso:
+# - Frontend: http://lingoquesto.local
+# - GraphQL Playground: http://api.lingoquesto.local/graphql/
+# - Bot API Docs: http://bot.lingoquesto.local/docs
+# - Realtime Docs: http://realtime.lingoquesto.local/docs
 ```
 
 ---
@@ -311,35 +456,46 @@ kubectl rollout restart statefulset/redis -n lingoquesto
 
 ## 🏗️ Arquitectura
 
-### Diagrama de Componentes (Bases de Datos)
+### Diagrama de Arquitectura Completa
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Namespace: lingoquesto                     │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐         ┌──────────────┐            │
-│  │ PostgreSQL   │         │    Redis     │            │
-│  │  Pod         │         │    Pod       │            │
-│  │              │         │              │            │
-│  │ postgres-0   │         │  redis-0     │            │
-│  │  :5432       │         │   :6379      │            │
-│  └──────┬───────┘         └──────┬───────┘            │
-│         │                        │                     │
-│         ▼                        ▼                     │
-│  ┌──────────────┐         ┌──────────────┐            │
-│  │ postgres-pvc │         │  redis-pvc   │            │
-│  │    5GB       │         │    2GB       │            │
-│  └──────────────┘         └──────────────┘            │
-│         │                        │                     │
-│         ▼                        ▼                     │
-│  ┌──────────────┐         ┌──────────────┐            │
-│  │ Service      │         │  Service     │            │
-│  │ postgres     │         │   redis      │            │
-│  │  :5432       │         │   :6379      │            │
-│  └──────────────┘         └──────────────┘            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+                          ┌──────────────────────────┐
+                          │   Ingress NGINX          │
+                          │  lingoquesto.local       │
+                          │  api.lingoquesto.local   │
+                          │  bot.lingoquesto.local   │
+                          │  realtime.lingoquesto.*  │
+                          └────────────┬─────────────┘
+                                       │
+        ┌──────────────────────────────┼──────────────────────────────┐
+        │                              │                              │
+        ▼                              ▼                              ▼
+┌───────────────┐            ┌──────────────────┐          ┌──────────────────┐
+│  Frontend     │            │ Django Backend   │          │  FastAPI Bot     │
+│  (Nuxt 4)     │            │   (GraphQL)      │          │   (AI/LLM)       │
+│  Port: 3000   │            │   Port: 8000     │          │   Port: 8081     │
+│  2 replicas   │            │   2 replicas     │          │   1 replica      │
+└───────────────┘            └────────┬─────────┘          └──────────────────┘
+                                      │
+                             ┌────────┴────────┐
+                             │                 │
+                      ┌──────▼──────┐   ┌─────▼──────────┐
+                      │ PostgreSQL  │   │     Redis      │
+                      │   :5432     │   │     :6379      │
+                      │ postgres-0  │   │   redis-0      │
+                      └─────────────┘   └────────────────┘
+                             │                 │
+                      ┌──────▼──────┐   ┌─────▼──────────┐
+                      │postgres-pvc │   │   redis-pvc    │
+                      │    10GB     │   │     5GB        │
+                      └─────────────┘   └────────────────┘
+                             │
+                      ┌──────▼──────────────┐
+                      │ FastAPI Realtime    │
+                      │   (WebSocket)       │
+                      │   Port: 8082        │
+                      │   1 replica         │
+                      └─────────────────────┘
 ```
 
 ### Flujo de Datos
@@ -353,11 +509,56 @@ kubectl rollout restart statefulset/redis -n lingoquesto
 
 ## 📚 Próximos Pasos
 
-- [ ] Desplegar servicios de aplicación (Django, FastAPI)
-- [ ] Configurar Ingress para acceso externo
-- [ ] Implementar ConfigMaps para cada servicio
-- [ ] Configurar Secrets para API keys
+- [x] Desplegar servicios de aplicación (Django, FastAPI)
+- [x] Configurar Ingress para acceso externo
+- [x] Implementar ConfigMaps para cada servicio
+- [x] Configurar Secrets para API keys
 - [ ] Agregar monitoreo con Prometheus/Grafana
+- [ ] Configurar backups automáticos
+- [ ] Implementar CI/CD con GitHub Actions
+
+---
+
+## 📝 Notas Importantes
+
+### Configuraciones Aplicadas
+
+1. **Django Backend**:
+   - `DEBUG=True` para desarrollo (habilita GraphiQL)
+   - Health check en `/health/` (verifica DB y Redis)
+   - Archivos estáticos servidos con Django (via `settings.DEBUG`)
+   - Schema PostgreSQL: `lq` (no `public`)
+
+2. **Frontend**:
+   - SSR habilitado (`ssr: true`, `nitro.preset: "node-server"`)
+   - Construido con Node 24 Alpine
+   - Monorepo con pnpm workspaces
+
+3. **Secrets**:
+   - JWT keys configuradas para Django <-> Realtime
+   - Credenciales de DB en secrets (no en código)
+
+### Troubleshooting Común
+
+**Pods en CrashLoopBackOff**:
+```bash
+kubectl logs <pod-name> -n lingoquesto --previous
+kubectl describe pod <pod-name> -n lingoquesto
+```
+
+**Health checks fallando**:
+- Django: Verificar que `/health/` endpoint existe
+- Verificar que las migraciones corrieron
+- Verificar que el schema `lq` existe en PostgreSQL
+
+**Frontend no carga**:
+- Verificar que SSR está habilitado en `nuxt.config.ts`
+- Verificar que `.output/server/index.mjs` existe en la imagen
+- Revisar logs: `kubectl logs deployment/frontend-student-teacher -n lingoquesto`
+
+**GraphiQL no aparece**:
+- Verificar `ENVIRONMENT=development` en configmap
+- Reconstruir imagen de Django después de cambios en código
 
 ---
 
